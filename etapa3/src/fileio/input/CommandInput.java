@@ -26,6 +26,7 @@ public final class CommandInput {
     private String nextPage;
     private String recommendationType;
 
+
     public String getRecommendationType() {
         return recommendationType;
     }
