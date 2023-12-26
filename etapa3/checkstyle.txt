@@ -1,0 +1,4 @@
+Starting audit...
+[ERROR] C:\Users\user\Desktop\oop-project-2023\etapa3\.\src\fileio\input\CommandInput.java:33:39: Parameter recommendationType should be final. [FinalParameters]
+Audit done.
+Checkstyle ends with 1 errors.
