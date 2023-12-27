@@ -2,11 +2,19 @@ package app.user;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import app.CommandRunner;
 import app.audio.Collections.Album;
 import app.audio.Collections.AlbumOutput;
 import app.audio.Files.Song;
 import app.pages.ArtistPage;
+import fileio.input.CommandInput;
+import lombok.Getter;
+import main.ArtistStatistics;
+import main.ListenHistory;
+import main.Statistics;
+import main.UserStatistics;
 
 /**
  * The type Artist.
@@ -15,6 +23,8 @@ public final class Artist extends ContentCreator {
     private ArrayList<Album> albums;
     private ArrayList<Merchandise> merch;
     private ArrayList<Event> events;
+    @Getter
+    private Statistics statistics;
 
     /**
      * Instantiates a new Artist.
@@ -30,6 +40,7 @@ public final class Artist extends ContentCreator {
         events = new ArrayList<>();
 
         super.setPage(new ArtistPage(this));
+        statistics = new ArtistStatistics();
     }
 
     /**
@@ -124,5 +135,30 @@ public final class Artist extends ContentCreator {
      */
     public String userType() {
         return "artist";
+    }
+
+
+    public void wrapStatistics(CommandInput command, List<User> users) {
+        ArtistStatistics artistStatistics = (ArtistStatistics) statistics;
+        for (User user : users) {
+            ListenHistory listenHistory = user.getListenHistory();
+            Map<Album, Integer> lastWrapped = user.getLastWrappedAlbum();
+
+            for (Album album : listenHistory.getListenAlbums().keySet()) {
+                Integer loadTime = listenHistory.getListenAlbums().get(album);
+
+                if (lastWrapped.containsKey(album)) {
+                    for (Song song : album.getSongs()) {
+                        if (loadTime >= lastWrapped.get(album) &&
+                                loadTime + song.getDuration() <= command.getTimestamp()) {
+                            artistStatistics.setTopAlbums(album.getName());
+                            artistStatistics.setTopSongs(song.getName());
+                            artistStatistics.setTopFans(user.getUsername());
+                        }
+                        loadTime += song.getDuration();
+                    }
+                }
+            }
+        }
     }
 }

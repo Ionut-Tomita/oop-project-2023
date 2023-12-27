@@ -8,9 +8,12 @@ import app.searchBar.Filters;
 import app.user.Artist;
 import app.user.Host;
 import app.user.User;
+import app.user.UserAbstract;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.input.CommandInput;
+import lombok.Getter;
+import main.Statistics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,7 @@ public final class CommandRunner {
      * The Object mapper.
      */
     private static ObjectMapper objectMapper = new ObjectMapper();
+    @Getter
     private static Admin admin;
 
     /**
@@ -49,6 +53,9 @@ public final class CommandRunner {
         String message = "%s is offline.".formatted(user.getUsername());
 
         if (user.isStatus()) {
+            user.setStatistics(user.wrapStatistics(commandInput));
+            user.clearHistory();
+            user.clearLastWrapped();
             results = user.search(filters, type);
             message = "Search returned " + results.size() + " results";
         }
@@ -91,7 +98,7 @@ public final class CommandRunner {
      */
     public static ObjectNode load(final CommandInput commandInput) {
         User user = admin.getUser(commandInput.getUsername());
-        String message = user.load();
+        String message = user.load(commandInput.getTimestamp());
 
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("command", commandInput.getCommand());
@@ -264,7 +271,7 @@ public final class CommandRunner {
     public static ObjectNode createPlaylist(final CommandInput commandInput) {
         User user = admin.getUser(commandInput.getUsername());
         String message = user.createPlaylist(commandInput.getPlaylistName(),
-                                             commandInput.getTimestamp());
+                commandInput.getTimestamp());
 
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("command", commandInput.getCommand());
@@ -780,5 +787,44 @@ public final class CommandRunner {
         objectNode.put("result", objectMapper.valueToTree(playlists));
 
         return objectNode;
+    }
+
+    public static ObjectNode wrapped(CommandInput command) {
+
+        Statistics result = admin.wrapped(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        if (result != null) {
+            objectNode.put("result", objectMapper.valueToTree(result));
+        } else {
+            UserAbstract user = admin.getUserAbstract(command.getUsername());
+            if (user.userType().equals("user")) {
+                objectNode.put("message", "No data to show for user %s."
+                        .formatted(command.getUsername()));
+            }
+            if (user.userType().equals("artist")) {
+                objectNode.put("message", "No data to show for artist %s."
+                        .formatted(command.getUsername()));
+            }
+            if (user.userType().equals("host")) {
+                objectNode.put("message", "No data to show for host %s."
+                        .formatted(command.getUsername()));
+            }
+        }
+
+        return objectNode;
+    }
+
+    public static ObjectNode endProgram() {
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", "endProgram");
+        objectNode.put("result", "");
+
+        return objectNode;
+
     }
 }

@@ -1,5 +1,7 @@
 package app.user;
 
+import app.CommandRunner;
+import app.audio.Collections.Album;
 import app.audio.Collections.AudioCollection;
 import app.audio.Collections.Playlist;
 import app.audio.Collections.PlaylistOutput;
@@ -14,11 +16,18 @@ import app.player.PlayerStats;
 import app.searchBar.Filters;
 import app.searchBar.SearchBar;
 import app.utils.Enums;
+import fileio.input.CommandInput;
 import lombok.Getter;
 import lombok.Setter;
+import main.ArtistStatistics;
+import main.ListenHistory;
+import main.Statistics;
+import main.UserStatistics;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The type User.
@@ -45,6 +54,12 @@ public final class User extends UserAbstract {
     @Getter
     @Setter
     private LikedContentPage likedContentPage;
+    @Getter @Setter
+    private Statistics statistics;
+    @Getter
+    private ListenHistory listenHistory;
+    @Getter @Setter
+    private Map<Album, Integer> lastWrappedAlbum;
 
     /**
      * Instantiates a new User.
@@ -66,6 +81,10 @@ public final class User extends UserAbstract {
         homePage = new HomePage(this);
         currentPage = homePage;
         likedContentPage = new LikedContentPage(this);
+
+        listenHistory = new ListenHistory();
+        statistics = new UserStatistics();
+        lastWrappedAlbum = new HashMap<>();
     }
 
     @Override
@@ -81,6 +100,7 @@ public final class User extends UserAbstract {
      * @return the array list
      */
     public ArrayList<String> search(final Filters filters, final String type) {
+
         searchBar.clearSelection();
         player.stop();
 
@@ -89,7 +109,7 @@ public final class User extends UserAbstract {
 
         if (type.equals("artist") || type.equals("host")) {
             List<ContentCreator> contentCreatorsEntries =
-            searchBar.searchContentCreator(filters, type);
+                    searchBar.searchContentCreator(filters, type);
 
             for (ContentCreator contentCreator : contentCreatorsEntries) {
                 results.add(contentCreator.getUsername());
@@ -122,7 +142,7 @@ public final class User extends UserAbstract {
         lastSearched = false;
 
         if (searchBar.getLastSearchType().equals("artist")
-            || searchBar.getLastSearchType().equals("host")) {
+                || searchBar.getLastSearchType().equals("host")) {
             ContentCreator selected = searchBar.selectContentCreator(itemNumber);
 
             if (selected == null) {
@@ -147,7 +167,7 @@ public final class User extends UserAbstract {
      *
      * @return the string
      */
-    public String load() {
+    public String load(Integer timestamp) {
         if (!status) {
             return "%s is offline.".formatted(getUsername());
         }
@@ -157,9 +177,13 @@ public final class User extends UserAbstract {
         }
 
         if (!searchBar.getLastSearchType().equals("song")
-            && ((AudioCollection) searchBar.getLastSelected()).getNumberOfTracks() == 0) {
+                && ((AudioCollection) searchBar.getLastSelected()).getNumberOfTracks() == 0) {
             return "You can't load an empty audio collection!";
         }
+
+        UserStatistics userStatistics = (UserStatistics) statistics;
+        userStatistics.updateLoadStatistics(this, searchBar.getLastSelected(),
+                searchBar.getLastSearchType(), timestamp);
 
         player.setSource(searchBar.getLastSelected(), searchBar.getLastSearchType());
         searchBar.clearSelection();
@@ -249,7 +273,7 @@ public final class User extends UserAbstract {
         }
 
         if (!player.getType().equals("playlist")
-            && !player.getType().equals("album")) {
+                && !player.getType().equals("album")) {
             return "The loaded source is not a playlist or an album.";
         }
 
@@ -322,7 +346,7 @@ public final class User extends UserAbstract {
         }
 
         if (!player.getType().equals("song") && !player.getType().equals("playlist")
-            && !player.getType().equals("album")) {
+                && !player.getType().equals("album")) {
             return "Loaded source is not a song.";
         }
 
@@ -588,5 +612,46 @@ public final class User extends UserAbstract {
         }
 
         player.simulatePlayer(time);
+    }
+
+    public Statistics wrapStatistics(CommandInput command) {
+        // pentru fiecare album ascutat, adaugam in statistici
+        // doar melodiile care au fost deja ascutate
+
+        UserStatistics statistics1 = (UserStatistics) statistics;
+
+        for (Album album : listenHistory.getListenAlbums().keySet()) {
+            int loadTime = listenHistory.getListenAlbums().get(album);
+            for (Song song : album.getSongs()) {
+                if (loadTime <= command.getTimestamp()) {
+                    statistics1.setTopArtists(song.getArtist());
+                    statistics1.setTopGenres(song.getGenre());
+                    statistics1.setTopSongs(song.getName());
+                    statistics1.setTopAlbums(song.getAlbum());
+                    loadTime += song.getDuration();
+
+                    // add to artist statistics
+                    Artist artist = CommandRunner.getAdmin().getArtist(song.getArtist());
+                    ArtistStatistics artistStatistics = (ArtistStatistics) artist.getStatistics();
+                    artistStatistics.setTopSongs(song.getName());
+                    artistStatistics.setTopAlbums(song.getAlbum());
+                    artistStatistics.setTopFans(getUsername());
+                } else {
+                    if (command.getCommand().equals("wrapped")) {
+                        lastWrappedAlbum.put(album, command.getTimestamp());
+                    }
+                    break;
+                }
+            }
+        }
+        return statistics1;
+    }
+
+    public void clearHistory() {
+        listenHistory = new ListenHistory();
+    }
+
+    public void clearLastWrapped() {
+        lastWrappedAlbum = new HashMap<>();
     }
 }
