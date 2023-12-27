@@ -41,6 +41,7 @@ public final class Artist extends ContentCreator {
 
         super.setPage(new ArtistPage(this));
         statistics = new ArtistStatistics();
+
     }
 
     /**
@@ -159,6 +160,36 @@ public final class Artist extends ContentCreator {
                     }
                 }
             }
+        }
+    }
+
+    @Override
+    public String subscribeMessage(User user) {
+        return "%s subscribed to %s successfully."
+                .formatted(user.getUsername(), this.getUsername());
+    }
+
+    @Override
+    public String unSubscribeMessage(User user) {
+        return "%s unsubscribed from %s successfully."
+                .formatted(user.getUsername(), this.getUsername());
+    }
+
+    public void sendNewAlbumNotification() {
+        for (User user : getSubscribers()) {
+            user.addNotification("New Album", "New Album from %s.".formatted(getUsername()));
+        }
+    }
+
+    public void sendNewMerchandiseNotification() {
+        for (User user : getSubscribers()) {
+            user.addNotification("New Merchandise", "New Merchandise from %s.".formatted(getUsername()));
+        }
+    }
+
+    public void sendNewEventNotification() {
+        for (User user : getSubscribers()) {
+            user.addNotification("New Event", "New Event from %s.".formatted(getUsername()));
         }
     }
 }

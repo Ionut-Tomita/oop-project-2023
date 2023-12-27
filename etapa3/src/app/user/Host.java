@@ -99,4 +99,28 @@ public final class Host extends ContentCreator {
     public String userType() {
         return "host";
     }
+
+    @Override
+    public String subscribeMessage(User user) {
+        return "%s subscribed to %s successfully."
+                .formatted(user.getUsername(), this.getUsername());
+    }
+
+    @Override
+    public String unSubscribeMessage(User user) {
+        return "%s unsubscribed from %s successfully."
+                .formatted(user.getUsername(), this.getUsername());
+    }
+
+    public void sendNewPodcastNotification() {
+        for (User user : getSubscribers()) {
+            user.addNotification("New Podcast", "New Podcast from %s.".formatted(getUsername()));
+        }
+    }
+
+    public void sendNewAnnouncementNotification() {
+        for (User user : getSubscribers()) {
+            user.addNotification("New Announcement", "New Announcement from %s.".formatted(getUsername()));
+        }
+    }
 }

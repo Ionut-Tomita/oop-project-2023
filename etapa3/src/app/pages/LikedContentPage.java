@@ -3,6 +3,7 @@ package app.pages;
 import app.audio.Collections.Playlist;
 import app.audio.Files.Song;
 import app.user.User;
+import app.user.UserAbstract;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
  * The type Liked content page.
  */
 public final class LikedContentPage implements Page {
+    private User owner;
     /**
      * The Liked songs.
      */
@@ -25,6 +27,7 @@ public final class LikedContentPage implements Page {
      * @param user the user
      */
     public LikedContentPage(final User user) {
+        owner = user;
         likedSongs = user.getLikedSongs();
         followedPlaylists = user.getFollowedPlaylists();
     }
@@ -36,5 +39,10 @@ public final class LikedContentPage implements Page {
                           .formatted(song.getName(), song.getArtist())).toList(),
                           followedPlaylists.stream().map(playlist -> "%s - %s"
                           .formatted(playlist.getName(), playlist.getOwner())).toList());
+    }
+
+    @Override
+    public UserAbstract getOwner() {
+        return owner;
     }
 }

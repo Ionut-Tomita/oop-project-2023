@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.input.CommandInput;
 import lombok.Getter;
+import main.Notifications;
 import main.Statistics;
 
 import java.util.ArrayList;
@@ -826,5 +827,30 @@ public final class CommandRunner {
 
         return objectNode;
 
+    }
+
+    public static ObjectNode subscribe(CommandInput command) {
+        String message = admin.subscribe(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        objectNode.put("message", message);
+
+        return objectNode;
+    }
+
+    public static ObjectNode getNotifications(CommandInput command) {
+
+        List<Notifications> notifications = admin.getNotifications(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        objectNode.put("notifications", objectMapper.valueToTree(notifications));
+
+        return objectNode;
     }
 }

@@ -8,6 +8,7 @@ import app.audio.Collections.PlaylistOutput;
 import app.audio.Files.AudioFile;
 import app.audio.Files.Song;
 import app.audio.LibraryEntry;
+import app.pages.ArtistPage;
 import app.pages.HomePage;
 import app.pages.LikedContentPage;
 import app.pages.Page;
@@ -19,11 +20,9 @@ import app.utils.Enums;
 import fileio.input.CommandInput;
 import lombok.Getter;
 import lombok.Setter;
-import main.ArtistStatistics;
-import main.ListenHistory;
-import main.Statistics;
-import main.UserStatistics;
+import main.*;
 
+import javax.management.Notification;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +59,8 @@ public final class User extends UserAbstract {
     private ListenHistory listenHistory;
     @Getter @Setter
     private Map<Album, Integer> lastWrappedAlbum;
+    @Getter
+    private List<Notifications> notifications;
 
     /**
      * Instantiates a new User.
@@ -85,6 +86,7 @@ public final class User extends UserAbstract {
         listenHistory = new ListenHistory();
         statistics = new UserStatistics();
         lastWrappedAlbum = new HashMap<>();
+        notifications = new ArrayList<>();
     }
 
     @Override
@@ -653,5 +655,30 @@ public final class User extends UserAbstract {
 
     public void clearLastWrapped() {
         lastWrappedAlbum = new HashMap<>();
+    }
+
+    public String subscribe(CommandInput command) {
+        if (currentPage.getOwner().userType().equals("artist") ||
+                currentPage.getOwner().userType().equals("host")) {
+            ContentCreator contentCreator = (ContentCreator) currentPage.getOwner();
+
+            if (contentCreator.getSubscribers().contains(this)) {
+                // se dezaboneaza
+                contentCreator.getSubscribers().remove(this);
+                return contentCreator.unSubscribeMessage(this);
+            }
+
+            contentCreator.getSubscribers().add(this);
+            return contentCreator.subscribeMessage(this);
+        }
+        return "To subscribe you need to be on the page of an artist or host.";
+    }
+
+    public void addNotification(String name, String description) {
+        notifications.add(new Notifications(name, description));
+    }
+
+    public void clearNotifications() {
+        notifications = new ArrayList<>();
     }
 }

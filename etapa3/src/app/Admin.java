@@ -21,10 +21,7 @@ import fileio.input.PodcastInput;
 import fileio.input.SongInput;
 import fileio.input.UserInput;
 import lombok.Getter;
-import main.ArtistOutput;
-import main.ArtistStatistics;
-import main.Statistics;
-import main.UserStatistics;
+import main.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -400,6 +397,7 @@ public final class Admin {
                 username,
                 newSongs,
                 commandInput.getReleaseYear()));
+        currentArtist.sendNewAlbumNotification();
         return "%s has added new album successfully.".formatted(username);
     }
 
@@ -559,6 +557,7 @@ public final class Admin {
         currentArtist.getEvents().add(new Event(eventName,
                 commandInput.getDescription(),
                 commandInput.getDate()));
+        currentArtist.sendNewEventNotification();
         return "%s has added new event successfully.".formatted(username);
     }
 
@@ -643,6 +642,7 @@ public final class Admin {
         currentArtist.getMerch().add(new Merchandise(commandInput.getName(),
                 commandInput.getDescription(),
                 commandInput.getPrice()));
+        currentArtist.sendNewMerchandiseNotification();
         return "%s has added new merchandise successfully.".formatted(username);
     }
 
@@ -673,6 +673,7 @@ public final class Admin {
 
         currentHost.getAnnouncements().add(new Announcement(announcementName,
                 announcementDescription));
+        currentHost.sendNewAnnouncementNotification();
         return "%s has successfully added new announcement.".formatted(username);
     }
 
@@ -906,5 +907,22 @@ public final class Admin {
             return artistOutput;
         }
         return new UserStatistics();
+    }
+
+    public String subscribe(CommandInput command) {
+        String username = command.getUsername();
+        UserAbstract currentUser = getAbstractUser(username);
+
+        return currentUser == null ? "The username %s doesn't exist.".formatted(username)
+                : ((User) currentUser).subscribe(command);
+    }
+
+    public List<Notifications> getNotifications(CommandInput command) {
+        String username = command.getUsername();
+        UserAbstract currentUser = getAbstractUser(username);
+
+        List<Notifications> notifications = ((User) currentUser).getNotifications();
+        ((User) currentUser).clearNotifications();
+        return notifications;
     }
 }
