@@ -21,17 +21,11 @@ import fileio.input.PodcastInput;
 import fileio.input.SongInput;
 import fileio.input.UserInput;
 import lombok.Getter;
+import lombok.Setter;
 import main.*;
+import main.Date;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,6 +41,8 @@ public final class Admin {
     private List<Host> hosts = new ArrayList<>();
     private List<Song> songs = new ArrayList<>();
     private List<Podcast> podcasts = new ArrayList<>();
+    @Getter @Setter
+    private Map<String, Date> generalStatistics = new HashMap<>();
     private int timestamp = 0;
     private final int limit = 5;
     private final int dateStringLength = 10;
@@ -81,6 +77,24 @@ public final class Admin {
     public static void resetInstance() {
         instance = null;
     }
+
+    public static TreeMap<String, Date> updateGeneralStatistics() {
+        Admin admin = Admin.getInstance();
+        Map<String, Date> generalStatistics = admin.getGeneralStatistics();
+        // sorteaza obiectele din map alfabetic
+
+        TreeMap<String, Date> sorted = new TreeMap<>();
+        sorted.putAll(generalStatistics);
+
+        // update la ranking
+        int ranking = 1;
+        for (Map.Entry<String, Date> entry : sorted.entrySet()) {
+            entry.getValue().setRanking(ranking);
+            ranking++;
+        }
+        return sorted;
+    }
+
 
     /**
      * Sets users.
@@ -924,5 +938,46 @@ public final class Admin {
         List<Notifications> notifications = ((User) currentUser).getNotifications();
         ((User) currentUser).clearNotifications();
         return notifications;
+    }
+    public static void addToGeneralStatistics(String artistName) {
+        if (!Admin.getInstance().getGeneralStatistics().containsKey(artistName)) {
+            Admin.getInstance().getGeneralStatistics().put(artistName, new Date());
+        }
+    }
+
+    public String buyMerch(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        if (user != null) {
+            return user.buyMerch(command);
+        } else {
+            return "The username %s doesn't exist.".formatted(command.getUsername());
+        }
+    }
+
+    public List<String> seeMerch(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        if (user != null) {
+            return user.seeMerch(command);
+        } else {
+            return null;
+        }
+    }
+
+    public String buyPremium(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        if (user != null) {
+            return user.buyPremium(command);
+        } else {
+            return "The username %s doesn't exist.".formatted(command.getUsername());
+        }
+    }
+
+    public String cancelPremium(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        if (user != null) {
+            return user.cancelPremium(command);
+        } else {
+            return "The username %s doesn't exist.".formatted(command.getUsername());
+        }
     }
 }

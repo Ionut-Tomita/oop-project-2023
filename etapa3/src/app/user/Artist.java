@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import app.Admin;
 import app.CommandRunner;
 import app.audio.Collections.Album;
 import app.audio.Collections.AlbumOutput;
@@ -138,6 +139,16 @@ public final class Artist extends ContentCreator {
         return "artist";
     }
 
+    public boolean containsMerch(final String merchName) {
+        for (Merchandise merchandise : merch) {
+            if (merchandise.getName().equals(merchName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     public void wrapStatistics(CommandInput command, List<User> users) {
         ArtistStatistics artistStatistics = (ArtistStatistics) statistics;
@@ -157,6 +168,7 @@ public final class Artist extends ContentCreator {
                             artistStatistics.setTopFans(user.getUsername());
                         }
                         loadTime += song.getDuration();
+
                     }
                 }
             }

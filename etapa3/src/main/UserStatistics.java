@@ -1,5 +1,6 @@
 package main;
 
+import app.Admin;
 import app.CommandRunner;
 import app.audio.Collections.Album;
 import app.audio.Files.Song;
@@ -83,11 +84,13 @@ public class UserStatistics implements Statistics{
 
             // add to artist statistics
             Artist artist = CommandRunner.getAdmin().getArtist(song.getArtist());
+
             if (artist != null) {
                 ArtistStatistics artistStatistics = (ArtistStatistics) artist.getStatistics();
                 artistStatistics.setTopSongs(song.getName());
                 artistStatistics.setTopAlbums(song.getAlbum());
                 artistStatistics.setTopFans(user1.getUsername());
+                Admin.addToGeneralStatistics(artist.getUsername());
             }
 
         } else if (type.equals("album")) {

@@ -1,5 +1,6 @@
 package app.user;
 
+import app.Admin;
 import app.CommandRunner;
 import app.audio.Collections.Album;
 import app.audio.Collections.AudioCollection;
@@ -61,6 +62,10 @@ public final class User extends UserAbstract {
     private Map<Album, Integer> lastWrappedAlbum;
     @Getter
     private List<Notifications> notifications;
+    @Getter
+    private Map<String, Integer> merch;
+    @Getter @Setter
+    private boolean premium;
 
     /**
      * Instantiates a new User.
@@ -87,6 +92,8 @@ public final class User extends UserAbstract {
         statistics = new UserStatistics();
         lastWrappedAlbum = new HashMap<>();
         notifications = new ArrayList<>();
+        merch = new HashMap<>();
+        premium = false;
     }
 
     @Override
@@ -623,6 +630,7 @@ public final class User extends UserAbstract {
         UserStatistics statistics1 = (UserStatistics) statistics;
 
         for (Album album : listenHistory.getListenAlbums().keySet()) {
+            Artist artist = CommandRunner.getAdmin().getArtist(album.getOwner());
             int loadTime = listenHistory.getListenAlbums().get(album);
             for (Song song : album.getSongs()) {
                 if (loadTime <= command.getTimestamp()) {
@@ -633,11 +641,11 @@ public final class User extends UserAbstract {
                     loadTime += song.getDuration();
 
                     // add to artist statistics
-                    Artist artist = CommandRunner.getAdmin().getArtist(song.getArtist());
                     ArtistStatistics artistStatistics = (ArtistStatistics) artist.getStatistics();
                     artistStatistics.setTopSongs(song.getName());
                     artistStatistics.setTopAlbums(song.getAlbum());
                     artistStatistics.setTopFans(getUsername());
+                    Admin.addToGeneralStatistics(artist.getUsername());
                 } else {
                     if (command.getCommand().equals("wrapped")) {
                         lastWrappedAlbum.put(album, command.getTimestamp());
@@ -680,5 +688,47 @@ public final class User extends UserAbstract {
 
     public void clearNotifications() {
         notifications = new ArrayList<>();
+    }
+
+    public String buyMerch(CommandInput command) {
+        if (!currentPage.getOwner().userType().equals("artist")) {
+            return "Cannot buy merch from this page.";
+        }
+        Artist artist = (Artist) currentPage.getOwner();
+        if (!artist.containsMerch(command.getName())) {
+            return "The merch %s doesn't exist.".formatted(command.getName());
+        }
+
+        merch.put(command.getName(), command.getTimestamp());
+        return "%s has added new merch successfully.".formatted(getUsername());
+
+    }
+
+    public List<String> seeMerch(CommandInput command) {
+        List<String> results = new ArrayList<>();
+        // adauga toate merchurile in ordine crescatoare dupa timestamp
+        merch.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue())
+                .forEachOrdered(x -> results.add(x.getKey()));
+
+        return results;
+    }
+
+    public String buyPremium(CommandInput command) {
+        if (premium) {
+            return "%s is already a premium user.".formatted(getUsername());
+        }
+
+        setPremium(true);
+        return "%s bought the subscription successfully.".formatted(getUsername());
+    }
+
+    public String cancelPremium(CommandInput command) {
+        if (!premium) {
+            return "%s is not a premium user.".formatted(getUsername());
+        }
+
+        setPremium(false);
+        return "%s cancelled the subscription successfully.".formatted(getUsername());
     }
 }

@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -86,6 +88,8 @@ public final class Main {
         admin.setPodcasts(library.getPodcasts());
         CommandRunner.updateAdmin();
 
+
+
         for (CommandInput command : commands) {
             admin.updateTimestamp(command.getTimestamp());
 
@@ -136,9 +140,14 @@ public final class Main {
                 case "getOnlineUsers" -> outputs.add(CommandRunner.getOnlineUsers(command));
                 case "showAlbums" -> outputs.add(CommandRunner.showAlbums(command));
                 case "showPodcasts" -> outputs.add(CommandRunner.showPodcasts(command));
+                // de aici am inceput etapa 3
                 case "wrapped" -> outputs.add(CommandRunner.wrapped(command));
                 case "subscribe" -> outputs.add(CommandRunner.subscribe(command));
                 case "getNotifications" -> outputs.add(CommandRunner.getNotifications(command));
+                case "buyMerch" -> outputs.add(CommandRunner.buyMerch(command));
+                case "seeMerch" -> outputs.add(CommandRunner.seeMerch(command));
+                case "buyPremium" -> outputs.add(CommandRunner.buyPremium(command));
+                case "cancelPremium" -> outputs.add(CommandRunner.cancelPremium(command));
                 default -> System.out.println("Invalid command " + commandName);
             }
         }
