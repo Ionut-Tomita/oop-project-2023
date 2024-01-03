@@ -821,7 +821,7 @@ public final class CommandRunner {
 
     public static ObjectNode endProgram() {
 
-        TreeMap<String, Date> sorted = Admin.updateGeneralStatistics();
+        Map<String, Date> sorted = Admin.updateGeneralStatistics();
 
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("command", "endProgram");
@@ -899,6 +899,69 @@ public final class CommandRunner {
 
     public static ObjectNode cancelPremium(CommandInput command) {
         String message = admin.cancelPremium(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        objectNode.put("message", message);
+
+        return objectNode;
+    }
+
+    public static ObjectNode adBreak(CommandInput command) {
+        String message = admin.adBreak(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        objectNode.put("message", message);
+
+        return objectNode;
+
+    }
+
+    public static ObjectNode updateRecommendation(CommandInput command) {
+        String message = admin.updateRecommendation(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        objectNode.put("message", message);
+
+        return objectNode;
+
+    }
+
+    public static ObjectNode previousPage(CommandInput command) {
+        String message = admin.previousPage(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        objectNode.put("message", message);
+
+        return objectNode;
+
+    }
+
+    public static ObjectNode nextPage(CommandInput command) {
+        String message = admin.nextPage(command);
+
+        ObjectNode objectNode = objectMapper.createObjectNode();
+        objectNode.put("command", command.getCommand());
+        objectNode.put("user", command.getUsername());
+        objectNode.put("timestamp", command.getTimestamp());
+        objectNode.put("message", message);
+
+        return objectNode;
+    }
+
+    public static ObjectNode loadRecommendations(CommandInput command) {
+        String message = admin.loadRecommendations(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("command", command.getCommand());

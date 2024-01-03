@@ -148,6 +148,12 @@ public final class Main {
                 case "seeMerch" -> outputs.add(CommandRunner.seeMerch(command));
                 case "buyPremium" -> outputs.add(CommandRunner.buyPremium(command));
                 case "cancelPremium" -> outputs.add(CommandRunner.cancelPremium(command));
+                case "adBreak" -> outputs.add(CommandRunner.adBreak(command));
+                case "updateRecommendations" -> outputs.add(CommandRunner
+                        .updateRecommendation(command));
+                case "previousPage" -> outputs.add(CommandRunner.previousPage(command));
+                case "nextPage" -> outputs.add(CommandRunner.nextPage(command));
+                case "loadRecommendations" -> outputs.add(CommandRunner.loadRecommendations(command));
                 default -> System.out.println("Invalid command " + commandName);
             }
         }

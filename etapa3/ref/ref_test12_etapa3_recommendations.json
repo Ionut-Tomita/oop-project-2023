@@ -110,7 +110,7 @@
   "user" : "morningstar",
   "command" : "printCurrentPage",
   "timestamp" : 135,
-  "message" : "Liked songs:\n\t[Purple Rain]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[Someone for Me]\n\nPlaylists recommendations:\n\t[morningstar's recommendations]"
+  "message" : "Liked songs:\n\t[Purple Rain]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[All at Once]\n\nPlaylists recommendations:\n\t[morningstar's recommendations]"
 }, {
   "command" : "endProgram",
   "result" : {

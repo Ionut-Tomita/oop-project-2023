@@ -119,9 +119,5 @@ public class ArtistStatistics implements Statistics{
         return top5Albums;
     }
 
-    public List<String> extractTopFans() {
-        List<String> fansList = new ArrayList<>(topFans.keySet());
-        return fansList;
-    }
 
 }

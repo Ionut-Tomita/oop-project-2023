@@ -757,7 +757,7 @@
     "timestamp": 1248,
     "name": "Event15",
     "description": "Event adaugat!",
-    "date": "01-01-2024"
+    "date": "01-01-2023"
   },
   {
     "command": "addMerch",
@@ -2786,7 +2786,7 @@
     "timestamp": 3354,
     "name": "Event2",
     "description": "Event adaugat!",
-    "date": "01-01-2024"
+    "date": "01-01-2023"
   },
   {
     "command": "addMerch",
@@ -3827,7 +3827,7 @@
     "timestamp": 5924,
     "name": "Event20",
     "description": "Event adaugat!",
-    "date": "01-01-2024"
+    "date": "01-01-2023"
   },
   {
     "command": "addMerch",
@@ -4328,7 +4328,7 @@
     "timestamp": 7124,
     "name": "Event32",
     "description": "Event adaugat!",
-    "date": "01-01-2024"
+    "date": "01-01-2023"
   },
   {
     "command": "removeAlbum",
@@ -6755,7 +6755,7 @@
     "timestamp": 8999,
     "name": "Event29",
     "description": "Event adaugat!",
-    "date": "01-01-2024"
+    "date": "01-01-2023"
   },
   {
     "command": "addAlbum",
@@ -7173,7 +7173,7 @@
     "timestamp": 9995,
     "name": "Event98",
     "description": "Event adaugat!",
-    "date": "01-01-2024"
+    "date": "01-01-2023"
   },
   {
     "command": "addAlbum",

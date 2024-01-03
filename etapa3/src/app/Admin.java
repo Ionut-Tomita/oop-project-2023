@@ -78,21 +78,48 @@ public final class Admin {
         instance = null;
     }
 
-    public static TreeMap<String, Date> updateGeneralStatistics() {
+    public static Map<String, Date> updateGeneralStatistics() {
+
+
         Admin admin = Admin.getInstance();
         Map<String, Date> generalStatistics = admin.getGeneralStatistics();
-        // sorteaza obiectele din map alfabetic
 
-        TreeMap<String, Date> sorted = new TreeMap<>();
-        sorted.putAll(generalStatistics);
+        // iau numele artistilor din generalStatistics si creez o lista de Artisti
+        List<String> artistNames = new ArrayList<>(generalStatistics.keySet());
 
-        // update la ranking
+        // iau artistii dupa numele lor
+        List<Artist> artists = new ArrayList<>();
+        for (String artistName : artistNames) {
+            Artist artist = admin.getArtist(artistName);
+            if (artist != null) {
+                artists.add(artist);
+            } else {
+                artists.add(new Artist(artistName));
+            }
+        }
+
+        //Sortez artistii dupa totalRevenue personal, iar daca acesta este egal, dupa nume
+        List<Artist> sortedArtists = new ArrayList<>(artists);
+
+        Collections.sort(sortedArtists, Comparator
+                .comparing(Artist::getTotalRevenue, Comparator.nullsLast(Double::compareTo)).reversed()
+                .thenComparing(Artist::getUsername, Comparator.nullsLast(String::compareTo)));
+
+        // creez un nou map in care pun artistii sortati dupa totalRevenue si datele lor
+        Map<String, Date> newGeneralStatistics = new LinkedHashMap<>();
+        for (Artist artist : sortedArtists) {
+            newGeneralStatistics.put(artist.getUsername(),
+                    new Date(artist.getMerchRevenue(), artist.getSongRevenue()));
+        }
+
+        // update ranking
         int ranking = 1;
-        for (Map.Entry<String, Date> entry : sorted.entrySet()) {
-            entry.getValue().setRanking(ranking);
+        for (String artistName : newGeneralStatistics.keySet()) {
+            newGeneralStatistics.get(artistName).setRanking(ranking);
             ranking++;
         }
-        return sorted;
+
+        return newGeneralStatistics;
     }
 
 
@@ -129,9 +156,8 @@ public final class Admin {
         for (PodcastInput podcastInput : podcastInputList) {
             List<Episode> episodes = new ArrayList<>();
             for (EpisodeInput episodeInput : podcastInput.getEpisodes()) {
-                episodes.add(new Episode(episodeInput.getName(),
-                        episodeInput.getDuration(),
-                        episodeInput.getDescription()));
+                episodes.add(new Episode(episodeInput.getName(), episodeInput.getDuration(),
+                        episodeInput.getDescription(), podcastInput.getOwner()));
             }
             podcasts.add(new Podcast(podcastInput.getName(), podcastInput.getOwner(), episodes));
         }
@@ -489,7 +515,8 @@ public final class Admin {
                 .map(episodeInput ->
                         new Episode(episodeInput.getName(),
                                 episodeInput.getDuration(),
-                                episodeInput.getDescription()))
+                                episodeInput.getDescription(),
+                                currentHost.getUsername()))
                 .collect(Collectors.toList());
 
         Set<String> episodeNames = new HashSet<>();
@@ -742,9 +769,14 @@ public final class Admin {
             return "%s is offline.".formatted(user.getUsername());
         }
 
+        user.getPreviousPages().addFirst(user.getCurrentPage());
+        user.setNextPages(new LinkedList<>());
+
         switch (nextPage) {
             case "Home" -> user.setCurrentPage(user.getHomePage());
             case "LikedContent" -> user.setCurrentPage(user.getLikedContentPage());
+            case "Artist" -> user.setCurrentPage(user.getArtistPage());
+            case "Host" -> user.setCurrentPage(user.getHostPage());
             default -> {
                 return "%s is trying to access a non-existent page.".formatted(username);
             }
@@ -920,7 +952,17 @@ public final class Admin {
             }
             return artistOutput;
         }
-        return new UserStatistics();
+        if (currentUser.userType().equals("host")) {
+            Host host = (Host) currentUser;
+            host.wrapStatistics(command, users);
+            HostStatistics statistics = (HostStatistics) host.getStatistics();
+            HostOutput hostOutput = new HostOutput(statistics);
+            if (hostOutput.isEmpty(hostOutput)) {
+                return null;
+            }
+            return hostOutput;
+        }
+        return null;
     }
 
     public String subscribe(CommandInput command) {
@@ -979,5 +1021,46 @@ public final class Admin {
         } else {
             return "The username %s doesn't exist.".formatted(command.getUsername());
         }
+    }
+
+    public String adBreak(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        if (user != null) {
+            return user.adBreak(command);
+        } else {
+            return "The username %s doesn't exist.".formatted(command.getUsername());
+        }
+    }
+
+    public String updateRecommendation(CommandInput command) {
+        UserAbstract currentUser = getAbstractUser(command.getUsername());
+        if (currentUser != null) {
+            if (currentUser.userType().equals("user")) {
+                User user = (User) currentUser;
+                return user.updateRecommendation(songs, command);
+            } else {
+                return "%s is not a normal user.".formatted(command.getUsername());
+            }
+        } else {
+            return "The username %s doesn't exist.".formatted(command.getUsername());
+        }
+    }
+
+    public String previousPage(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        String message = user.previousPage(command);
+        return message;
+    }
+
+    public String nextPage(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        String message = user.nextPage(command);
+        return message;
+    }
+
+    public String loadRecommendations(CommandInput command) {
+        User user = this.getUser(command.getUsername());
+        String message = user.loadRecommendations(command);
+        return message;
     }
 }

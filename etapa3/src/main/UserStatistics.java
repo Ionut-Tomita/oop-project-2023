@@ -3,6 +3,7 @@ package main;
 import app.Admin;
 import app.CommandRunner;
 import app.audio.Collections.Album;
+import app.audio.Collections.Podcast;
 import app.audio.Files.Song;
 import app.audio.LibraryEntry;
 import app.user.Artist;
@@ -78,6 +79,7 @@ public class UserStatistics implements Statistics{
         if (type.equals("song")) {
             Song song = (Song) entry;
             statistics.setTopArtists(song.getArtist());
+            Admin.addToGeneralStatistics(song.getArtist());
             statistics.setTopGenres(song.getGenre());
             statistics.setTopSongs(song.getName());
             statistics.setTopAlbums(song.getAlbum());
@@ -90,12 +92,14 @@ public class UserStatistics implements Statistics{
                 artistStatistics.setTopSongs(song.getName());
                 artistStatistics.setTopAlbums(song.getAlbum());
                 artistStatistics.setTopFans(user1.getUsername());
-                Admin.addToGeneralStatistics(artist.getUsername());
             }
 
         } else if (type.equals("album")) {
             Album album = (Album) entry;
-            user1.getListenHistory().addToListenHistory(album, loadTime);
+            user1.getListenHistory().addAlbumToListenHistory(album, loadTime);
+        } else if (type.equals("podcast")) {
+            Podcast podcast = (Podcast) entry;
+            user1.getListenHistory().addPodcastToListenHistory(podcast, loadTime);
         }
     }
 

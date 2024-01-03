@@ -17,4 +17,10 @@ public class Date {
         mostProfitableSong = "N/A";
     }
 
+    public Date(double merchRevenue, double songRevenue) {
+        this.merchRevenue = merchRevenue;
+        this.songRevenue = songRevenue;
+        ranking = 1;
+        mostProfitableSong = "N/A";
+    }
 }

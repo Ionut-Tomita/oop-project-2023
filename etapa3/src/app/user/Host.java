@@ -1,9 +1,19 @@
 package app.user;
 
+import app.audio.Collections.Album;
 import app.audio.Collections.Podcast;
+import app.audio.Files.Episode;
+import app.audio.Files.Song;
 import app.pages.HostPage;
+import fileio.input.CommandInput;
+import lombok.Getter;
+import main.HostStatistics;
+import main.ListenHistory;
+import main.Statistics;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The type Host.
@@ -11,6 +21,8 @@ import java.util.ArrayList;
 public final class Host extends ContentCreator {
     private ArrayList<Podcast> podcasts;
     private ArrayList<Announcement> announcements;
+    @Getter
+    private Statistics statistics;
 
     /**
      * Instantiates a new Host.
@@ -23,6 +35,7 @@ public final class Host extends ContentCreator {
         super(username, age, city);
         podcasts = new ArrayList<>();
         announcements = new ArrayList<>();
+        statistics = new HostStatistics();
 
         super.setPage(new HostPage(this));
     }
@@ -121,6 +134,31 @@ public final class Host extends ContentCreator {
     public void sendNewAnnouncementNotification() {
         for (User user : getSubscribers()) {
             user.addNotification("New Announcement", "New Announcement from %s.".formatted(getUsername()));
+        }
+    }
+
+    public void wrapStatistics(CommandInput command, List<User> users) {
+        HostStatistics hostStatistics = (HostStatistics) statistics;
+        for (User user : users) {
+
+            ListenHistory listenHistory = user.getListenHistory();
+            Map<Podcast, Integer> lastWrapped = user.getLastWrappedPodcast();
+
+            for (Podcast podcast : listenHistory.getListenPodcasts().keySet()) {
+                Integer loadTime = listenHistory.getListenPodcasts().get(podcast);
+
+                if (lastWrapped.containsKey(podcast)) {
+                    for (Episode episode : podcast.getEpisodes()) {
+                        if (loadTime >= lastWrapped.get(podcast) &&
+                                loadTime + episode.getDuration() <= command.getTimestamp()) {
+                            hostStatistics.setTopEpisodes(podcast.getName());
+                            hostStatistics.setTopFans(user.getUsername());
+                        }
+                        loadTime += episode.getDuration();
+
+                    }
+                }
+            }
         }
     }
 }

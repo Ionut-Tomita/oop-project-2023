@@ -542,7 +542,7 @@
   "command" : "addEvent",
   "user" : "Rihanna",
   "timestamp" : 1248,
-  "message" : "Event for Rihanna does not have a valid date."
+  "message" : "Rihanna has added new event successfully."
 }, {
   "command" : "addMerch",
   "user" : "Nothing But Thieves",
@@ -662,7 +662,7 @@
   "command" : "addEvent",
   "user" : "Michael Jackson",
   "timestamp" : 3354,
-  "message" : "Event for Michael Jackson does not have a valid date."
+  "message" : "Michael Jackson has added new event successfully."
 }, {
   "command" : "addMerch",
   "user" : "Madonna",
@@ -739,6 +739,9 @@
   "user" : "henry26",
   "timestamp" : 4811,
   "notifications" : [ {
+    "name" : "New Event",
+    "description" : "New Event from Rihanna."
+  }, {
     "name" : "New Album",
     "description" : "New Album from Bob Dylan."
   }, {
@@ -776,7 +779,7 @@
   "command" : "addEvent",
   "user" : "Aretha Franklin",
   "timestamp" : 5924,
-  "message" : "Event for Aretha Franklin does not have a valid date."
+  "message" : "Aretha Franklin has added new event successfully."
 }, {
   "command" : "addMerch",
   "user" : "The Police",
@@ -855,6 +858,9 @@
   }, {
     "name" : "New Merchandise",
     "description" : "New Merchandise from James Brown."
+  }, {
+    "name" : "New Event",
+    "description" : "New Event from Aretha Franklin."
   } ]
 }, {
   "command" : "getNotifications",
@@ -865,7 +871,7 @@
   "command" : "addEvent",
   "user" : "Bob Dylan",
   "timestamp" : 7124,
-  "message" : "Event for Bob Dylan does not have a valid date."
+  "message" : "Bob Dylan has added new event successfully."
 }, {
   "command" : "removeAlbum",
   "user" : "Madonna",
@@ -1029,7 +1035,7 @@
   "command" : "addEvent",
   "user" : "Madonna",
   "timestamp" : 8999,
-  "message" : "Event for Madonna does not have a valid date."
+  "message" : "Madonna has added new event successfully."
 }, {
   "command" : "addAlbum",
   "user" : "Fleetwood Mac",
@@ -1045,6 +1051,9 @@
   }, {
     "name" : "New Album",
     "description" : "New Album from The Police."
+  }, {
+    "name" : "New Event",
+    "description" : "New Event from Madonna."
   } ]
 }, {
   "command" : "removeAlbum",
@@ -1080,7 +1089,7 @@
   "command" : "addEvent",
   "user" : "Eric Clapton",
   "timestamp" : 9995,
-  "message" : "Event for Eric Clapton does not have a valid date."
+  "message" : "Eric Clapton has added new event successfully."
 }, {
   "command" : "addAlbum",
   "user" : "Bob Dylan",

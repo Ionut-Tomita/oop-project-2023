@@ -26,6 +26,14 @@ public final class Artist extends ContentCreator {
     private ArrayList<Event> events;
     @Getter
     private Statistics statistics;
+    @Getter
+    private double totalRevenue;
+    @Getter
+    private double merchRevenue;
+    @Getter
+    private double songRevenue;
+    @Getter
+    private String mostProfitableSong = "N/A";
 
     /**
      * Instantiates a new Artist.
@@ -42,7 +50,24 @@ public final class Artist extends ContentCreator {
 
         super.setPage(new ArtistPage(this));
         statistics = new ArtistStatistics();
+        totalRevenue = 0;
+        merchRevenue = 0;
+        songRevenue = 0;
 
+    }
+
+    public Artist(String artistName) {
+        super(artistName, 0, "");
+        merchRevenue = 0;
+        totalRevenue = 0;
+        songRevenue = 0;
+    }
+
+    public void addTotalRevenue(final double revenue) {
+        totalRevenue += revenue;
+    }
+    public void addMerchRevenue(final double revenue) {
+        merchRevenue += revenue;
     }
 
     /**
@@ -168,7 +193,6 @@ public final class Artist extends ContentCreator {
                             artistStatistics.setTopFans(user.getUsername());
                         }
                         loadTime += song.getDuration();
-
                     }
                 }
             }
@@ -203,5 +227,18 @@ public final class Artist extends ContentCreator {
         for (User user : getSubscribers()) {
             user.addNotification("New Event", "New Event from %s.".formatted(getUsername()));
         }
+    }
+
+    public Integer getMerchPrice(String name) {
+        for (Merchandise merchandise : merch) {
+            if (merchandise.getName().equals(name)) {
+                return merchandise.getPrice();
+            }
+        }
+        return null;
+    }
+
+    public double getTotalRevenue() {
+        return totalRevenue;
     }
 }

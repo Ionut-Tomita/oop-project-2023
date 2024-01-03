@@ -2,11 +2,9 @@ package app.user;
 
 import app.Admin;
 import app.CommandRunner;
-import app.audio.Collections.Album;
-import app.audio.Collections.AudioCollection;
-import app.audio.Collections.Playlist;
-import app.audio.Collections.PlaylistOutput;
+import app.audio.Collections.*;
 import app.audio.Files.AudioFile;
+import app.audio.Files.Episode;
 import app.audio.Files.Song;
 import app.audio.LibraryEntry;
 import app.pages.ArtistPage;
@@ -23,11 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 import main.*;
 
-import javax.management.Notification;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The type User.
@@ -60,12 +54,24 @@ public final class User extends UserAbstract {
     private ListenHistory listenHistory;
     @Getter @Setter
     private Map<Album, Integer> lastWrappedAlbum;
+    @Getter @Setter
+    private Map<Podcast, Integer> lastWrappedPodcast;
     @Getter
     private List<Notifications> notifications;
     @Getter
     private Map<String, Integer> merch;
     @Getter @Setter
     private boolean premium;
+    @Getter
+    private List<Song> recommendedSongs;
+    @Getter
+    private List<Playlist> recommendedPlaylists;
+    @Getter @Setter
+    private String recommedationPlaylistUpdated;
+    @Getter
+    private LinkedList<Page> previousPages;
+    @Getter @Setter
+    private LinkedList<Page> nextPages;
 
     /**
      * Instantiates a new User.
@@ -88,12 +94,19 @@ public final class User extends UserAbstract {
         currentPage = homePage;
         likedContentPage = new LikedContentPage(this);
 
+
         listenHistory = new ListenHistory();
         statistics = new UserStatistics();
         lastWrappedAlbum = new HashMap<>();
         notifications = new ArrayList<>();
         merch = new HashMap<>();
         premium = false;
+        recommendedSongs = new ArrayList<>();
+        recommendedPlaylists = new ArrayList<>();
+        recommedationPlaylistUpdated = "";
+
+        previousPages = new LinkedList<>();
+        nextPages = new LinkedList<>();
     }
 
     @Override
@@ -635,6 +648,7 @@ public final class User extends UserAbstract {
             for (Song song : album.getSongs()) {
                 if (loadTime <= command.getTimestamp()) {
                     statistics1.setTopArtists(song.getArtist());
+                    Admin.addToGeneralStatistics(song.getArtist());
                     statistics1.setTopGenres(song.getGenre());
                     statistics1.setTopSongs(song.getName());
                     statistics1.setTopAlbums(song.getAlbum());
@@ -645,12 +659,32 @@ public final class User extends UserAbstract {
                     artistStatistics.setTopSongs(song.getName());
                     artistStatistics.setTopAlbums(song.getAlbum());
                     artistStatistics.setTopFans(getUsername());
-                    Admin.addToGeneralStatistics(artist.getUsername());
                 } else {
                     if (command.getCommand().equals("wrapped")) {
                         lastWrappedAlbum.put(album, command.getTimestamp());
                     }
                     break;
+                }
+            }
+        }
+        for (Podcast podcast : listenHistory.getListenPodcasts().keySet()) {
+            Host host = CommandRunner.getAdmin().getHost(podcast.getOwner());
+            int loadTime = listenHistory.getListenPodcasts().get(podcast);
+            for (Episode episode : podcast.getEpisodes()) {
+                if (loadTime <= command.getTimestamp()) {
+                    statistics1.setTopEpisodes(episode.getName());
+                    loadTime += episode.getDuration();
+
+                    if (host != null) {
+                        HostStatistics hostStatistics = (HostStatistics) host.getStatistics();
+                        hostStatistics.setTopEpisodes(episode.getName());
+                        hostStatistics.setTopFans(getUsername());
+                    }
+
+                } else {
+                    if (command.getCommand().equals("wrapped")) {
+                        lastWrappedPodcast.put(podcast, command.getTimestamp());
+                    }
                 }
             }
         }
@@ -699,6 +733,11 @@ public final class User extends UserAbstract {
             return "The merch %s doesn't exist.".formatted(command.getName());
         }
 
+        // adauga pentru artist merchRevenue
+        Admin.addToGeneralStatistics(artist.getUsername());
+        artist.addMerchRevenue(artist.getMerchPrice(command.getName()));
+        artist.addTotalRevenue(artist.getMerchPrice(command.getName()));
+
         merch.put(command.getName(), command.getTimestamp());
         return "%s has added new merch successfully.".formatted(getUsername());
 
@@ -730,5 +769,109 @@ public final class User extends UserAbstract {
 
         setPremium(false);
         return "%s cancelled the subscription successfully.".formatted(getUsername());
+    }
+
+    public String adBreak(CommandInput command) {
+
+        if (player.getCurrentAudioFile() == null) {
+            return "%s is not playing any music.".formatted(getUsername());
+        }
+
+        return "Ad inserted successfully.";
+    }
+
+    public String updateRecommendation(List<Song> songs, CommandInput command) {
+
+        if (command.getRecommendationType().equals("random_playlist")) {
+            recommedationPlaylistUpdated = "%s's recommendations".formatted(getUsername());
+            //return "No new recommendations were found";
+        }
+
+        if (player.getSource() != null && player.getType().equals("song") ) {
+            Song song = (Song) player.getCurrentAudioFile();
+
+            if (command.getRecommendationType().equals("fans_playlist")) {
+                recommedationPlaylistUpdated = "%s Fan Club recommendations".formatted(song.getArtist());
+                //return "No new recommendations were found";
+            }
+
+            if (command.getRecommendationType().equals("random_song")) {
+                Integer passedTime = song.getDuration() - player.getRemainedDuration();
+                if (passedTime >= 30) {
+                    //Se cauta melodiile din genre-ul melodiei care canta acum.
+                    List<Song> songsByGenre = new ArrayList<>();
+                    for (Song song1 : songs) {
+                        if (song1.getGenre().equals(song.getGenre())) {
+                            songsByGenre.add(song1);
+                        }
+                    }
+
+                    Random random = new Random(passedTime);
+                    int index = random.nextInt(songsByGenre.size());
+                    Song generatedSong = songsByGenre.get(index);
+                    recommendedSongs.add(generatedSong);
+                    getHomePage().getRecommendedSongs().add(generatedSong);
+
+                } else {
+                    return "No new recommendations were found";
+                }
+            }
+
+        }
+
+
+        return "The recommendations for user %s have been updated successfully."
+                .formatted(getUsername());
+    }
+
+    public Page getArtistPage() {
+        Song song = (Song) player.getSource().getAudioFile();
+        Artist artist = CommandRunner.getAdmin().getArtist(song.getArtist());
+        return artist.getPage();
+    }
+
+    public Page getHostPage() {
+        Episode episode = (Episode) player.getSource().getAudioFile();
+        Host host = CommandRunner.getAdmin().getHost(episode.getHost());
+        return host.getPage();
+    }
+
+    public String previousPage(CommandInput command) {
+        if (previousPages.isEmpty()) {
+            return "There are no pages left to go back.";
+        }
+
+        // update la pagina curenta si la forward pages and previous pages
+        Page currentPage = previousPages.removeFirst();
+        nextPages.addFirst(this.currentPage);
+        this.currentPage = currentPage;
+
+        return "The user %s has navigated successfully to the previous page.".formatted(getUsername());
+    }
+
+    public String nextPage(CommandInput command) {
+if (nextPages.isEmpty()) {
+            return "There are no pages left to go forward.";
+        }
+
+        // update la pagina curenta si la forward pages and previous pages
+        Page currentPage = nextPages.removeFirst();
+        previousPages.addFirst(this.currentPage);
+        this.currentPage = currentPage;
+
+        return "The user %s has navigated successfully to the next page.".formatted(getUsername());
+    }
+
+    public String loadRecommendations(CommandInput command) {
+    if (recommendedSongs.isEmpty()) {
+            return "No recommendations available.";
+        }
+
+        player.setSource(recommendedSongs.get(0), "song");
+        searchBar.clearSelection();
+
+        player.pause();
+
+        return "Playback loaded successfully.";
     }
 }

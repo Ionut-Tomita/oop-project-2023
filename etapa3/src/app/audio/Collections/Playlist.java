@@ -6,6 +6,7 @@ import app.utils.Enums;
 import lombok.Getter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The type Playlist.
@@ -41,6 +42,7 @@ public final class Playlist extends AudioCollection {
         this.followers = 0;
         this.timestamp = timestamp;
     }
+
 
     /**
      * Contains song boolean.

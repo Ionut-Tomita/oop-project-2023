@@ -71,7 +71,7 @@
   "user" : "alice22",
   "command" : "printCurrentPage",
   "timestamp" : 150,
-  "message" : "Liked songs:\n\t[Amsterdam]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[Reset Me]\n\nPlaylists recommendations:\n\t[]"
+  "message" : "Liked songs:\n\t[Amsterdam]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[I Was Just a Kid]\n\nPlaylists recommendations:\n\t[]"
 }, {
   "command" : "updateRecommendations",
   "user" : "alice22",
@@ -91,7 +91,7 @@
   "user" : "alice22",
   "command" : "printCurrentPage",
   "timestamp" : 190,
-  "message" : "Liked songs:\n\t[Amsterdam]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[Reset Me]\n\nPlaylists recommendations:\n\t[alice22's recommendations]"
+  "message" : "Liked songs:\n\t[Amsterdam]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[I Was Just a Kid]\n\nPlaylists recommendations:\n\t[alice22's recommendations]"
 }, {
   "command" : "endProgram",
   "result" : {

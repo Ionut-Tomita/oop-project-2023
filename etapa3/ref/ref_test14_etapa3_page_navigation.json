@@ -1,13 +1,18 @@
 [ {
+  "command" : "addAlbum",
+  "user" : "Pink Floyd",
+  "timestamp" : 1,
+  "message" : "The username Pink Floyd doesn't exist."
+}, {
   "command" : "addUser",
-  "user" : "TED",
+  "user" : "TED-X",
   "timestamp" : 10,
-  "message" : "The username TED has been added successfully."
+  "message" : "The username TED-X has been added successfully."
 }, {
   "command" : "addPodcast",
-  "user" : "TED",
+  "user" : "TED-X",
   "timestamp" : 15,
-  "message" : "TED has added new podcast successfully."
+  "message" : "TED-X has added new podcast successfully."
 }, {
   "command" : "addUser",
   "user" : "Queen",
@@ -28,12 +33,12 @@
   "user" : "ghiu",
   "timestamp" : 45,
   "message" : "Search returned 1 results",
-  "results" : [ "TED Talks Daily" ]
+  "results" : [ "Auditory Adventures" ]
 }, {
   "command" : "select",
   "user" : "ghiu",
   "timestamp" : 50,
-  "message" : "Successfully selected TED Talks Daily."
+  "message" : "Successfully selected Auditory Adventures."
 }, {
   "command" : "load",
   "user" : "ghiu",
@@ -54,8 +59,8 @@
   "user" : "ghiu",
   "timestamp" : 70,
   "stats" : {
-    "name" : "The Power of Vulnerability",
-    "remainedTime" : 1197,
+    "name" : "Exploring Sonic Landscapes",
+    "remainedTime" : 2685,
     "repeat" : "No Repeat",
     "shuffle" : false,
     "paused" : false
@@ -105,7 +110,7 @@
 }, {
   "command" : "updateRecommendations",
   "user" : "ghiu",
-  "timestamp" : 135,
+  "timestamp" : 152,
   "message" : "The recommendations for user ghiu have been updated successfully."
 }, {
   "command" : "loadRecommendations",
@@ -117,8 +122,8 @@
   "user" : "ghiu",
   "timestamp" : 165,
   "stats" : {
-    "name" : "We Will Rock You",
-    "remainedTime" : 112,
+    "name" : "Radio Ga Ga",
+    "remainedTime" : 334,
     "repeat" : "No Repeat",
     "shuffle" : false,
     "paused" : false
@@ -142,7 +147,7 @@
   "user" : "ghiu",
   "command" : "printCurrentPage",
   "timestamp" : 205,
-  "message" : "Liked songs:\n\t[Bohemian Rhapsody, We Will Rock You]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[We Will Rock You]\n\nPlaylists recommendations:\n\t[]"
+  "message" : "Liked songs:\n\t[Bohemian Rhapsody, Radio Ga Ga]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[Radio Ga Ga]\n\nPlaylists recommendations:\n\t[]"
 }, {
   "command" : "previousPage",
   "user" : "ghiu",
@@ -182,7 +187,7 @@
   "user" : "ghiu",
   "command" : "printCurrentPage",
   "timestamp" : 265,
-  "message" : "Liked songs:\n\t[Bohemian Rhapsody, We Will Rock You]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[We Will Rock You]\n\nPlaylists recommendations:\n\t[]"
+  "message" : "Liked songs:\n\t[Bohemian Rhapsody, Radio Ga Ga]\n\nFollowed playlists:\n\t[]\n\nSong recommendations:\n\t[Radio Ga Ga]\n\nPlaylists recommendations:\n\t[]"
 }, {
   "command" : "nextPage",
   "user" : "ghiu",

@@ -1,15 +1,186 @@
 [
   {
+    "command": "addAlbum",
+    "username": "Pink Floyd",
+    "timestamp": 1,
+    "name": "The Dark Side of the Moon",
+    "songs": [
+      {
+        "name": "Speak to Me",
+        "duration": 165,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "Breathe (In the Air)",
+        "duration": 170,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "On the Run",
+        "duration": 308,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "Time",
+        "duration": 391,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "The Great Gig in the Sky",
+        "duration": 410,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "Money",
+        "duration": 521,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "Us and Them",
+        "duration": 489,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "Any Colour You Like",
+        "duration": 490,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "Brain Damage",
+        "duration": 223,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      },
+      {
+        "name": "Eclipse",
+        "duration": 139,
+        "album": "The Dark Side of the Moon",
+        "tags": [
+          "progressive rock",
+          "psychedelic rock",
+          "classic rock",
+          "rock",
+          "pink floyd"
+        ],
+        "lyrics": "Couldn't find lyrics for this track",
+        "genre": "progressive rock",
+        "releaseYear": 2023,
+        "artist": "Pink Floyd"
+      }
+    ],
+    "description": "The Dark Side of the Moon is the eighth studio album by English rock band Pink Floyd, released on 1 March 1973 by Harvest Records. The album built on ideas explored in earlier recordings and live shows, but lacks the extended instrumental excursions that characterized their earlier work. Its themes explore conflict, greed, the passage of time, and mental illness, the latter partly inspired by the deteriorating mental state of founding member and principal contributor, Syd Barrett. Developed during live performances, an early version was premiered several months before recording began; the new material was recorded in two sessions in <a href=\"https://www.last.fm/music/Pink+Floyd/The+Dark+Side+of+the+Moon\">Read more on Last.fm</a>.",
+    "releaseYear": 2023
+  },
+
+  {
     "command": "addUser",
     "timestamp": 10,
     "type": "host",
-    "username": "TED",
+    "username": "TED-X",
     "age": 70,
     "city": "Los Angeles"
   },
   {
     "command": "addPodcast",
-    "username": "TED",
+    "username": "TED-X",
     "timestamp": 15,
     "name": "Auditory Adventures",
     "episodes": [
@@ -334,8 +505,8 @@
     "timestamp": 45,
     "type": "podcast",
     "filters": {
-      "name": "TED Talks Daily",
-      "owner": "TED"
+      "name": "Auditory Adventures",
+      "owner": "TED-X"
     }
   },
   {
@@ -409,7 +580,7 @@
   {
     "command": "updateRecommendations",
     "username": "ghiu",
-    "timestamp": 135,
+    "timestamp": 152,
     "recommendationType": "random_song"
   },
   {
