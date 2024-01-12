@@ -1,21 +1,20 @@
-package app.user;
+package app.user.artist;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import app.Admin;
-import app.CommandRunner;
 import app.audio.Collections.Album;
 import app.audio.Collections.AlbumOutput;
 import app.audio.Files.Song;
 import app.pages.ArtistPage;
+import app.user.ContentCreator;
+import app.user.normalUser.User;
 import fileio.input.CommandInput;
 import lombok.Getter;
-import main.ArtistStatistics;
-import main.ListenHistory;
-import main.Statistics;
-import main.UserStatistics;
+import app.statistics.ArtistStatistics;
+import app.user.normalUser.ListenHistory;
+import app.statistics.Statistics;
 
 /**
  * The type Artist.
@@ -56,16 +55,26 @@ public final class Artist extends ContentCreator {
 
     }
 
-    public Artist(String artistName) {
+    public Artist(final String artistName) {
         super(artistName, 0, "");
         merchRevenue = 0;
         totalRevenue = 0;
         songRevenue = 0;
     }
 
+
+    /**
+     * add to total revenue
+     * @param revenue
+     */
     public void addTotalRevenue(final double revenue) {
         totalRevenue += revenue;
     }
+
+    /**
+     * add merch revenue
+     * @param revenue
+     */
     public void addMerchRevenue(final double revenue) {
         merchRevenue += revenue;
     }
@@ -164,80 +173,130 @@ public final class Artist extends ContentCreator {
         return "artist";
     }
 
-    public boolean containsMerch(final String merchName) {
-        for (Merchandise merchandise : merch) {
-            if (merchandise.getName().equals(merchName)) {
-                return true;
-            }
+    @Override
+    public Statistics wrap(final CommandInput commandInput, final List<User> users) {
+        wrapStatistics(commandInput, users);
+        ArtistOutput artistOutput = new ArtistOutput((ArtistStatistics) statistics);
+        if (artistOutput.isEmpty(artistOutput)) {
+            return null;
         }
+        return artistOutput;
+    }
 
-        return false;
+    @Override
+    public String noDataMessage() {
+        return "No data to show for artist %s.".formatted(this.getUsername());
     }
 
 
-    public void wrapStatistics(CommandInput command, List<User> users) {
+    /**
+     * verify if contains merch
+     * @param merchName
+     * @return boolean
+     */
+    public boolean containsMerch(final String merchName) {
+        return merch.stream().anyMatch(merchandise -> merchandise.getName().equals(merchName));
+    }
+
+    /**
+     * wrap statistics
+     * @param command
+     * @param users
+     */
+    public void wrapStatistics(final CommandInput command, final List<User> users) {
         ArtistStatistics artistStatistics = (ArtistStatistics) statistics;
-        for (User user : users) {
+
+        users.forEach(user -> {
             ListenHistory listenHistory = user.getListenHistory();
             Map<Album, Integer> lastWrapped = user.getLastWrappedAlbum();
 
-            for (Album album : listenHistory.getListenAlbums().keySet()) {
-                Integer loadTime = listenHistory.getListenAlbums().get(album);
-
+            listenHistory.getListenAlbums().forEach((album, loadTime) -> {
                 if (lastWrapped.containsKey(album)) {
+                    int passedTime = loadTime;
                     for (Song song : album.getSongs()) {
-                        if (loadTime >= lastWrapped.get(album) &&
-                                loadTime + song.getDuration() <= command.getTimestamp()) {
+                        if (passedTime >= lastWrapped.get(album) && passedTime + song.getDuration()
+                                <= command.getTimestamp()) {
                             artistStatistics.setTopAlbums(album.getName());
                             artistStatistics.setTopSongs(song.getName());
                             artistStatistics.setTopFans(user.getUsername());
                         }
-                        loadTime += song.getDuration();
+                        passedTime += song.getDuration();
                     }
                 }
-            }
-        }
+            });
+        });
     }
 
+
+    /**
+     * subscribe message
+     * @param user
+     * @return message
+     */
     @Override
-    public String subscribeMessage(User user) {
+    public String subscribeMessage(final User user) {
         return "%s subscribed to %s successfully."
                 .formatted(user.getUsername(), this.getUsername());
     }
 
+    /**
+     * Unsubscribe message string.
+     *
+     * @param user the user
+     * @return the string
+     */
     @Override
-    public String unSubscribeMessage(User user) {
+    public String unSubscribeMessage(final User user) {
         return "%s unsubscribed from %s successfully."
                 .formatted(user.getUsername(), this.getUsername());
     }
 
+    /**
+     * Send new album notification.
+     */
     public void sendNewAlbumNotification() {
-        for (User user : getSubscribers()) {
-            user.addNotification("New Album", "New Album from %s.".formatted(getUsername()));
-        }
+        getSubscribers().forEach(user ->
+                user.addNotification("New Album", "New Album from %s."
+                        .formatted(getUsername()))
+        );
     }
 
+    /**
+     * Send new merchandise notification.
+     */
     public void sendNewMerchandiseNotification() {
-        for (User user : getSubscribers()) {
-            user.addNotification("New Merchandise", "New Merchandise from %s.".formatted(getUsername()));
-        }
+        getSubscribers().forEach(user ->
+                user.addNotification("New Merchandise", "New Merchandise from %s."
+                        .formatted(getUsername()))
+        );
     }
 
+    /**
+     * Send new event notification.
+     */
     public void sendNewEventNotification() {
-        for (User user : getSubscribers()) {
-            user.addNotification("New Event", "New Event from %s.".formatted(getUsername()));
-        }
+        getSubscribers().forEach(user ->
+                user.addNotification("New Event", "New Event from %s.".formatted(getUsername()))
+        );
     }
 
-    public Integer getMerchPrice(String name) {
-        for (Merchandise merchandise : merch) {
-            if (merchandise.getName().equals(name)) {
-                return merchandise.getPrice();
-            }
-        }
-        return null;
+    /**
+     * Gets merch price.
+     * @param name
+     * @return price
+     */
+    public Integer getMerchPrice(final String name) {
+        return merch.stream()
+                .filter(merchandise -> merchandise.getName().equals(name))
+                .map(Merchandise::getPrice)
+                .findFirst()
+                .orElse(null);
     }
 
+    /**
+     * Gets total revenue.
+     * @return the total revenue
+     */
     public double getTotalRevenue() {
         return totalRevenue;
     }

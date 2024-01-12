@@ -16,8 +16,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -73,7 +71,8 @@ public final class Main {
     public static void action(final String filePath1,
                               final String filePath2) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        LibraryInput library = objectMapper.readValue(new File(CheckerConstants.TESTS_PATH
+
+         LibraryInput library = objectMapper.readValue(new File(CheckerConstants.TESTS_PATH
                         + "library/library.json"),
                 LibraryInput.class);
         CommandInput[] commands = objectMapper.readValue(new File(CheckerConstants.TESTS_PATH
@@ -153,7 +152,8 @@ public final class Main {
                         .updateRecommendation(command));
                 case "previousPage" -> outputs.add(CommandRunner.previousPage(command));
                 case "nextPage" -> outputs.add(CommandRunner.nextPage(command));
-                case "loadRecommendations" -> outputs.add(CommandRunner.loadRecommendations(command));
+                case "loadRecommendations" -> outputs.add(CommandRunner
+                        .loadRecommendations(command));
                 default -> System.out.println("Invalid command " + commandName);
             }
         }

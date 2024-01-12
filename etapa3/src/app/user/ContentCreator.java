@@ -1,10 +1,10 @@
 package app.user;
 
 import app.pages.Page;
+import app.user.normalUser.User;
 import lombok.Getter;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -64,15 +64,25 @@ public abstract class ContentCreator extends UserAbstract {
         this.page = page;
     }
 
+    /**
+     * getSubscribers
+     * @return subscribers
+     */
     public List<User> getSubscribers() {
         return subscribers;
     }
 
-    public String subscribeMessage(User user) {
-        return "";
-    }
+    /**
+     * subscribe
+     * @param user
+     */
+    public abstract String subscribeMessage(User user);
 
-    public String unSubscribeMessage(User user) {
-        return "";
-    }
+    /**
+     * unSubscribeMessage
+     * @param user
+     * @return String
+     */
+    public abstract String unSubscribeMessage(User user);
+
 }

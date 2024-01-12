@@ -2,8 +2,7 @@ package app.pages;
 
 import app.audio.Collections.Playlist;
 import app.audio.Files.Song;
-import app.user.ContentCreator;
-import app.user.User;
+import app.user.normalUser.User;
 import app.user.UserAbstract;
 import lombok.Getter;
 
@@ -38,8 +37,8 @@ public final class HomePage implements Page {
 
     @Override
     public String printCurrentPage() {
-        return ("Liked songs:\n\t%s\n\nFollowed playlists:\n\t%s\n\n" +
-                "Song recommendations:\n\t%s\n\nPlaylists recommendations:\n\t[%s]")
+        return ("Liked songs:\n\t%s\n\nFollowed playlists:\n\t%s\n\n"
+                + "Song recommendations:\n\t%s\n\nPlaylists recommendations:\n\t[%s]")
                .formatted(likedSongs.stream()
                                     .sorted(Comparator.comparing(Song::getLikes)
                                     .reversed()).limit(limit).map(Song::getName)

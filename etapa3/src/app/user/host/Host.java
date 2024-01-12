@@ -1,15 +1,15 @@
-package app.user;
+package app.user.host;
 
-import app.audio.Collections.Album;
 import app.audio.Collections.Podcast;
 import app.audio.Files.Episode;
-import app.audio.Files.Song;
 import app.pages.HostPage;
+import app.user.ContentCreator;
+import app.user.normalUser.User;
 import fileio.input.CommandInput;
 import lombok.Getter;
-import main.HostStatistics;
-import main.ListenHistory;
-import main.Statistics;
+import app.statistics.HostStatistics;
+import app.user.normalUser.ListenHistory;
+import app.statistics.Statistics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,36 +108,83 @@ public final class Host extends ContentCreator {
         return null;
     }
 
+    /**
+     * get userType
+     * @return String
+     */
     @Override
     public String userType() {
         return "host";
     }
 
+    /**
+     * wrap statistics
+     * @param commandInput
+     * @param users
+     * @return Statistics
+     */
     @Override
-    public String subscribeMessage(User user) {
+    public Statistics wrap(final CommandInput commandInput, final List<User> users) {
+        wrapStatistics(commandInput, users);
+        HostOutput hostOutput = new HostOutput((HostStatistics) statistics);
+        if (hostOutput.isEmpty(hostOutput)) {
+            return null;
+        }
+        return hostOutput;
+    }
+
+    @Override
+    public String noDataMessage() {
+        return "No data to show for host %s.".formatted(this.getUsername());
+    }
+
+    /**
+     * subscribe message
+     * @param user
+     * @return String
+     */
+    @Override
+    public String subscribeMessage(final User user) {
         return "%s subscribed to %s successfully."
                 .formatted(user.getUsername(), this.getUsername());
     }
 
+    /**
+     * unsubscribe message
+     * @param user
+     * @return String
+     */
     @Override
-    public String unSubscribeMessage(User user) {
+    public String unSubscribeMessage(final User user) {
         return "%s unsubscribed from %s successfully."
                 .formatted(user.getUsername(), this.getUsername());
     }
 
+    /**
+     * send new podcast notification
+     */
     public void sendNewPodcastNotification() {
         for (User user : getSubscribers()) {
             user.addNotification("New Podcast", "New Podcast from %s.".formatted(getUsername()));
         }
     }
 
+    /**
+     * send new announcement notification
+     */
     public void sendNewAnnouncementNotification() {
         for (User user : getSubscribers()) {
-            user.addNotification("New Announcement", "New Announcement from %s.".formatted(getUsername()));
+            user.addNotification("New Announcement", "New Announcement from %s."
+                    .formatted(getUsername()));
         }
     }
 
-    public void wrapStatistics(CommandInput command, List<User> users) {
+    /**
+     * wrap statistics
+     * @param command
+     * @param users
+     */
+    public void wrapStatistics(final CommandInput command, final List<User> users) {
         HostStatistics hostStatistics = (HostStatistics) statistics;
         for (User user : users) {
 
@@ -149,8 +196,8 @@ public final class Host extends ContentCreator {
 
                 if (lastWrapped.containsKey(podcast)) {
                     for (Episode episode : podcast.getEpisodes()) {
-                        if (loadTime >= lastWrapped.get(podcast) &&
-                                loadTime + episode.getDuration() <= command.getTimestamp()) {
+                        if (loadTime >= lastWrapped.get(podcast)
+                                && loadTime + episode.getDuration() <= command.getTimestamp()) {
                             hostStatistics.setTopEpisodes(podcast.getName());
                             hostStatistics.setTopFans(user.getUsername());
                         }

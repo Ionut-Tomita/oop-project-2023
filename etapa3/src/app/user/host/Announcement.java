@@ -1,24 +1,21 @@
-package app.user;
+package app.user.host;
 
 /**
- * The type Event.
+ * The type Announcement.
  */
-public class Event {
+public class Announcement {
     private String name;
     private String description;
-    private String date;
 
     /**
-     * Instantiates a new Event.
+     * Instantiates a new Announcement.
      *
      * @param name        the name
      * @param description the description
-     * @param date        the date
      */
-    public Event(final String name, final String description, final String date) {
+    public Announcement(final String name, final String description) {
         this.name = name;
         this.description = description;
-        this.date = date;
     }
 
     /**
@@ -55,23 +52,5 @@ public class Event {
      */
     public void setDescription(final String description) {
         this.description = description;
-    }
-
-    /**
-     * Gets date.
-     *
-     * @return the date
-     */
-    public String getDate() {
-        return date;
-    }
-
-    /**
-     * Sets date.
-     *
-     * @param date the date
-     */
-    public void setDate(final String date) {
-        this.date = date;
     }
 }

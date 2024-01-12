@@ -3,11 +3,12 @@ package app.audio.Collections;
 import app.audio.Files.AudioFile;
 import app.audio.LibraryEntry;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The type Audio collection.
  */
-@Getter
+@Getter @Setter
 public abstract class AudioCollection extends LibraryEntry {
     private final String owner;
 
@@ -20,6 +21,9 @@ public abstract class AudioCollection extends LibraryEntry {
     public AudioCollection(final String name, final String owner) {
         super(name);
         this.owner = owner;
+    }
+    public AudioCollection() {
+        owner = "";
     }
 
     /**

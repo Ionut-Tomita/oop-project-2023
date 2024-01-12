@@ -1,21 +1,24 @@
-package app.user;
+package app.user.artist;
 
 /**
- * The type Announcement.
+ * The type Merchandise.
  */
-public class Announcement {
+public class Merchandise {
     private String name;
     private String description;
+    private int price;
 
     /**
-     * Instantiates a new Announcement.
+     * Instantiates a new Merchandise.
      *
      * @param name        the name
      * @param description the description
+     * @param price       the price
      */
-    public Announcement(final String name, final String description) {
+    public Merchandise(final String name, final String description, final int price) {
         this.name = name;
         this.description = description;
+        this.price = price;
     }
 
     /**
@@ -52,5 +55,23 @@ public class Announcement {
      */
     public void setDescription(final String description) {
         this.description = description;
+    }
+
+    /**
+     * Gets price.
+     *
+     * @return the price
+     */
+    public int getPrice() {
+        return price;
+    }
+
+    /**
+     * Sets price.
+     *
+     * @param price the price
+     */
+    public void setPrice(final int price) {
+        this.price = price;
     }
 }

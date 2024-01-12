@@ -8,13 +8,15 @@ import app.audio.Files.AudioFile;
 import app.audio.Files.Episode;
 import app.audio.Files.Song;
 import app.player.Player;
-import app.user.Announcement;
-import app.user.Artist;
-import app.user.Event;
-import app.user.Host;
-import app.user.Merchandise;
-import app.user.User;
+import app.statistics.Statistics;
+import app.user.normalUser.User;
 import app.user.UserAbstract;
+import app.user.UserFactory;
+import app.user.artist.Artist;
+import app.user.artist.Event;
+import app.user.artist.Merchandise;
+import app.user.host.Announcement;
+import app.user.host.Host;
 import fileio.input.CommandInput;
 import fileio.input.EpisodeInput;
 import fileio.input.PodcastInput;
@@ -22,10 +24,21 @@ import fileio.input.SongInput;
 import fileio.input.UserInput;
 import lombok.Getter;
 import lombok.Setter;
-import main.*;
-import main.Date;
+import app.user.artist.Info;
+import app.user.normalUser.Notifications;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,7 +55,7 @@ public final class Admin {
     private List<Song> songs = new ArrayList<>();
     private List<Podcast> podcasts = new ArrayList<>();
     @Getter @Setter
-    private Map<String, Date> generalStatistics = new HashMap<>();
+    private Map<String, Info> generalStatistics = new HashMap<>();
     private int timestamp = 0;
     private final int limit = 5;
     private final int dateStringLength = 10;
@@ -78,11 +91,15 @@ public final class Admin {
         instance = null;
     }
 
-    public static Map<String, Date> updateGeneralStatistics() {
-
+    /**
+     * Update general statistics map.
+     *
+     * @return the map
+     */
+    public static Map<String, Info> updateGeneralStatistics() {
 
         Admin admin = Admin.getInstance();
-        Map<String, Date> generalStatistics = admin.getGeneralStatistics();
+        Map<String, Info> generalStatistics = admin.getGeneralStatistics();
 
         // iau numele artistilor din generalStatistics si creez o lista de Artisti
         List<String> artistNames = new ArrayList<>(generalStatistics.keySet());
@@ -102,14 +119,15 @@ public final class Admin {
         List<Artist> sortedArtists = new ArrayList<>(artists);
 
         Collections.sort(sortedArtists, Comparator
-                .comparing(Artist::getTotalRevenue, Comparator.nullsLast(Double::compareTo)).reversed()
+                .comparing(Artist::getTotalRevenue, Comparator.nullsLast(Double::compareTo))
+                .reversed()
                 .thenComparing(Artist::getUsername, Comparator.nullsLast(String::compareTo)));
 
         // creez un nou map in care pun artistii sortati dupa totalRevenue si datele lor
-        Map<String, Date> newGeneralStatistics = new LinkedHashMap<>();
+        Map<String, Info> newGeneralStatistics = new LinkedHashMap<>();
         for (Artist artist : sortedArtists) {
             newGeneralStatistics.put(artist.getUsername(),
-                    new Date(artist.getMerchRevenue(), artist.getSongRevenue()));
+                    new Info(artist.getMerchRevenue(), artist.getSongRevenue()));
         }
 
         // update ranking
@@ -297,20 +315,21 @@ public final class Admin {
     public String addNewUser(final CommandInput commandInput) {
         String username = commandInput.getUsername();
         String type = commandInput.getType();
-        int age = commandInput.getAge();
-        String city = commandInput.getCity();
 
         UserAbstract currentUser = getAbstractUser(username);
         if (currentUser != null) {
             return "The username %s is already taken.".formatted(username);
         }
 
+
+        UserAbstract user = UserFactory.getUser(commandInput);
+
         if (type.equals("user")) {
-            users.add(new User(username, age, city));
+            users.add((User) user);
         } else if (type.equals("artist")) {
-            artists.add(new Artist(username, age, city));
+            artists.add((Artist) user);
         } else {
-            hosts.add(new Host(username, age, city));
+            hosts.add((Host) user);
         }
 
         return "The username %s has been added successfully.".formatted(username);
@@ -926,54 +945,48 @@ public final class Admin {
         return topPlaylists;
     }
 
-    public UserAbstract getUserAbstract(String username) {
+    /**
+     * get user abstract
+     *
+     * @param username
+     * @return user abstract
+     */
+    public UserAbstract getUserAbstract(final String username) {
         return getAbstractUser(username);
     }
 
-    public Statistics wrapped(CommandInput command) {
+    /**
+     * wrapped
+     *
+     * @param command
+     * @return statistics
+     */
+    public Statistics wrapped(final CommandInput command) {
         UserAbstract currentUser = getAbstractUser(command.getUsername());
-
-        if (currentUser.userType().equals("user")) {
-            User user = (User) currentUser;
-            UserStatistics statistics = (UserStatistics) user.wrapStatistics(command);
-            statistics.updateStatistics();
-            if (statistics.isEmpty(statistics)) {
-                return null;
-            }
-            return statistics;
-        }
-        if (currentUser.userType().equals("artist")) {
-            Artist artist = (Artist) currentUser;
-            artist.wrapStatistics(command, users);
-            ArtistStatistics statistics = (ArtistStatistics) artist.getStatistics();
-            ArtistOutput artistOutput = new ArtistOutput(statistics);
-            if (artistOutput.isEmpty(artistOutput)) {
-                return null;
-            }
-            return artistOutput;
-        }
-        if (currentUser.userType().equals("host")) {
-            Host host = (Host) currentUser;
-            host.wrapStatistics(command, users);
-            HostStatistics statistics = (HostStatistics) host.getStatistics();
-            HostOutput hostOutput = new HostOutput(statistics);
-            if (hostOutput.isEmpty(hostOutput)) {
-                return null;
-            }
-            return hostOutput;
-        }
-        return null;
+        return currentUser.wrap(command, users);
     }
 
-    public String subscribe(CommandInput command) {
+    /**
+     * subscribe message
+     *
+     * @param command
+     * @return the message
+     */
+    public String subscribe(final CommandInput command) {
         String username = command.getUsername();
         UserAbstract currentUser = getAbstractUser(username);
 
         return currentUser == null ? "The username %s doesn't exist.".formatted(username)
-                : ((User) currentUser).subscribe(command);
+                : ((User) currentUser).subscribe();
     }
 
-    public List<Notifications> getNotifications(CommandInput command) {
+    /**
+     * get notifications
+     *
+     * @param command
+     * @return notifications
+     */
+    public List<Notifications> getNotifications(final CommandInput command) {
         String username = command.getUsername();
         UserAbstract currentUser = getAbstractUser(username);
 
@@ -981,13 +994,23 @@ public final class Admin {
         ((User) currentUser).clearNotifications();
         return notifications;
     }
-    public static void addToGeneralStatistics(String artistName) {
+
+    /**
+     * add to general statistics
+     * @param artistName
+     */
+    public static void addToGeneralStatistics(final String artistName) {
         if (!Admin.getInstance().getGeneralStatistics().containsKey(artistName)) {
-            Admin.getInstance().getGeneralStatistics().put(artistName, new Date());
+            Admin.getInstance().getGeneralStatistics().put(artistName, new Info());
         }
     }
 
-    public String buyMerch(CommandInput command) {
+    /**
+     * buy merch message
+     * @param command
+     * @return the message
+     */
+    public String buyMerch(final CommandInput command) {
         User user = this.getUser(command.getUsername());
         if (user != null) {
             return user.buyMerch(command);
@@ -996,34 +1019,54 @@ public final class Admin {
         }
     }
 
-    public List<String> seeMerch(CommandInput command) {
+    /**
+     * see merch
+     * @param command
+     * @return the merch
+     */
+    public List<String> seeMerch(final CommandInput command) {
         User user = this.getUser(command.getUsername());
         if (user != null) {
-            return user.seeMerch(command);
+            return user.seeMerch();
         } else {
             return null;
         }
     }
 
-    public String buyPremium(CommandInput command) {
+    /**
+     * buy premium message
+     * @param command
+     * @return the message
+     */
+    public String buyPremium(final CommandInput command) {
         User user = this.getUser(command.getUsername());
         if (user != null) {
-            return user.buyPremium(command);
+            return user.buyPremium();
         } else {
             return "The username %s doesn't exist.".formatted(command.getUsername());
         }
     }
 
-    public String cancelPremium(CommandInput command) {
+    /**
+     * cancel premium message
+     * @param command
+     * @return the message
+     */
+    public String cancelPremium(final CommandInput command) {
         User user = this.getUser(command.getUsername());
         if (user != null) {
-            return user.cancelPremium(command);
+            return user.cancelPremium();
         } else {
             return "The username %s doesn't exist.".formatted(command.getUsername());
         }
     }
 
-    public String adBreak(CommandInput command) {
+    /**
+     * ad break message
+     * @param command
+     * @return the message
+     */
+    public String adBreak(final CommandInput command) {
         User user = this.getUser(command.getUsername());
         if (user != null) {
             return user.adBreak(command);
@@ -1032,7 +1075,12 @@ public final class Admin {
         }
     }
 
-    public String updateRecommendation(CommandInput command) {
+    /**
+     * update recommendation message
+     * @param command
+     * @return the message
+     */
+    public String updateRecommendation(final CommandInput command) {
         UserAbstract currentUser = getAbstractUser(command.getUsername());
         if (currentUser != null) {
             if (currentUser.userType().equals("user")) {
@@ -1046,21 +1094,50 @@ public final class Admin {
         }
     }
 
-    public String previousPage(CommandInput command) {
+    /**
+     * move to previous page
+     * @param command
+     * @return the message
+     */
+    public String previousPage(final CommandInput command) {
         User user = this.getUser(command.getUsername());
-        String message = user.previousPage(command);
+        String message = user.previousPage();
         return message;
     }
 
-    public String nextPage(CommandInput command) {
+    /**
+     * move to next page
+     * @param command
+     * @return the message
+     */
+    public String nextPage(final CommandInput command) {
         User user = this.getUser(command.getUsername());
-        String message = user.nextPage(command);
+        String message = user.nextPage();
         return message;
     }
 
-    public String loadRecommendations(CommandInput command) {
+    /**
+     * load recommendations
+     * @param command
+     * @return the message
+     */
+    public String loadRecommendations(final CommandInput command) {
         User user = this.getUser(command.getUsername());
-        String message = user.loadRecommendations(command);
+        String message = user.loadRecommendations();
         return message;
+    }
+
+    /**
+     * get song
+     * @param song
+     * @return
+     */
+    public Song getSong(final String song) {
+        for (Song song1 : songs) {
+            if (song1.getName().equals(song)) {
+                return song1;
+            }
+        }
+        return null;
     }
 }

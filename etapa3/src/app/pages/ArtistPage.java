@@ -1,9 +1,9 @@
 package app.pages;
 
 import app.audio.Collections.Album;
-import app.user.Artist;
-import app.user.Event;
-import app.user.Merchandise;
+import app.user.artist.Artist;
+import app.user.artist.Event;
+import app.user.artist.Merchandise;
 import lombok.Getter;
 
 import java.util.List;

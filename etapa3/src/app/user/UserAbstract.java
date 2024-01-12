@@ -1,5 +1,11 @@
 package app.user;
 
+import app.statistics.Statistics;
+import app.user.normalUser.User;
+import fileio.input.CommandInput;
+
+import java.util.List;
+
 /**
  * The type User abstract.
  */
@@ -81,4 +87,20 @@ public abstract class UserAbstract {
      * @return the string
      */
     public abstract String userType();
+
+    /**
+     * Wrap statistics.
+     *
+     * @param commandInput the command input
+     * @param users        the users
+     * @return the statistics
+     */
+    public abstract Statistics wrap(CommandInput commandInput, List<User> users);
+
+    /**
+     * No data message string.
+     *
+     * @return the string
+     */
+    public abstract String noDataMessage();
 }

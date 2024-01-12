@@ -1,9 +1,8 @@
 package app.pages;
 
 import app.audio.Collections.Podcast;
-import app.user.Announcement;
-import app.user.ContentCreator;
-import app.user.Host;
+import app.user.host.Announcement;
+import app.user.host.Host;
 import app.user.UserAbstract;
 
 import java.util.List;

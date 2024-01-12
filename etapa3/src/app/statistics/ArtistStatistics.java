@@ -1,23 +1,16 @@
-package main;
-
-import app.CommandRunner;
-import app.audio.Files.Song;
-import app.audio.LibraryEntry;
-import app.user.Artist;
-import app.user.User;
-import app.user.UserAbstract;
+package app.statistics;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 @Getter
-public class ArtistStatistics implements Statistics{
+public final class ArtistStatistics implements Statistics {
     private Map<String, Integer> topAlbums;
     private Map<String, Integer> topSongs;
-    private Map <String, Integer> topFans;
+    private Map<String, Integer> topFans;
+
+    public static final int MAX_SIZE = 5;
 
 
     public ArtistStatistics() {
@@ -27,7 +20,18 @@ public class ArtistStatistics implements Statistics{
 
     }
 
-    public void setTopAlbums(String album) {
+    /**
+     * Metodele de tip setTopX adaugă în map-ul corespunzător numele albumului, cântecului sau
+     * utilizatorului și numărul de ascultări.
+     * Dacă albumul, cântecul sau utilizatorul există deja în map, se adaugă numărul de ascultări
+     * la numărul de ascultări existent.
+     */
+
+    /**
+     * adaugă în map-ul topAlbums numele albumului și numărul de ascultări
+     * @param album
+     */
+    public void setTopAlbums(final String album) {
         if (topAlbums.containsKey(album)) {
             topAlbums.put(album, topAlbums.get(album) + 1);
         } else {
@@ -35,7 +39,11 @@ public class ArtistStatistics implements Statistics{
         }
     }
 
-    public void setTopSongs(String song) {
+    /**
+     * adaugă în map-ul topSongs numele cântecului și numărul de ascultări
+     * @param song
+     */
+    public void setTopSongs(final String song) {
         if (topSongs.containsKey(song)) {
             topSongs.put(song, topSongs.get(song) + 1);
         } else {
@@ -43,7 +51,11 @@ public class ArtistStatistics implements Statistics{
         }
     }
 
-    public void setTopFans(String user) {
+    /**
+     * adaugă în map-ul topFans numele utilizatorului și numărul de ascultări
+     * @param user
+     */
+    public void setTopFans(final String user) {
         if (topFans.containsKey(user)) {
             topFans.put(user, topFans.get(user) + 1);
         } else {
@@ -51,6 +63,10 @@ public class ArtistStatistics implements Statistics{
         }
     }
 
+    /**
+     * Metoda updateStatistics actualizează statisticile.
+     * Se sortează map-urile după numărul de ascultări și se limitează la primele 5 elemente.
+     */
     @Override
     public void updateStatistics() {
         topAlbums = getTop5AlbumsByListens();
@@ -59,65 +75,67 @@ public class ArtistStatistics implements Statistics{
     }
 
 
+    /**
+     * getTop5FansByListens
+     * @return un map cu primii 5 fani ai artistului curent, sortați după numărul de ascultări
+     */
     public Map<String, Integer> getTop5FansByListens() {
         Map<String, Integer> top5Fans = new LinkedHashMap<>();
 
-        // Sortează albumele după numărul de ascultări și le limitează la primele 5
         topFans.entrySet().stream()
                 .sorted((entry1, entry2) -> {
-                    // Sortează descrescător după numărul de ascultări
                     int compare = entry2.getValue().compareTo(entry1.getValue());
                     if (compare != 0) {
                         return compare;
                     }
-                    // În cazul în care numărul de ascultări este același, sortează alfabetic
                     return entry1.getKey().compareTo(entry2.getKey());
                 })
-                .limit(5)
+                .limit(MAX_SIZE)
                 .forEachOrdered(entry -> top5Fans.put(entry.getKey(), entry.getValue()));
 
         return top5Fans;
     }
 
+    /**
+     * getTop5SongsByListens
+     * @return un map cu primele 5 cântece ale artistului curent, sortate după numărul de ascultări
+     */
     public Map<String, Integer> getTop5SongsByListens() {
         Map<String, Integer> top5Songs = new LinkedHashMap<>();
 
-        // Sortează cântecele după numărul de ascultări și le limitează la primele 5
         topSongs.entrySet().stream()
                 .sorted((entry1, entry2) -> {
-                    // Sortează descrescător după numărul de ascultări
                     int compare = entry2.getValue().compareTo(entry1.getValue());
                     if (compare != 0) {
                         return compare;
                     }
-                    // În cazul în care numărul de ascultări este același, sortează alfabetic
                     return entry1.getKey().compareTo(entry2.getKey());
                 })
-                .limit(5)
+                .limit(MAX_SIZE)
                 .forEachOrdered(entry -> top5Songs.put(entry.getKey(), entry.getValue()));
 
         return top5Songs;
     }
 
+    /**
+     * getTop5AlbumsByListens
+     * @return un map cu primele 5 albume ale artistului curent, sortate după numărul de ascultări
+     */
     public Map<String, Integer> getTop5AlbumsByListens() {
         Map<String, Integer> top5Albums = new LinkedHashMap<>();
 
-        // Sortează albumele după numărul de ascultări și le limitează la primele 5
         topAlbums.entrySet().stream()
                 .sorted((entry1, entry2) -> {
-                    // Sortează descrescător după numărul de ascultări
                     int compare = entry2.getValue().compareTo(entry1.getValue());
                     if (compare != 0) {
                         return compare;
                     }
-                    // În cazul în care numărul de ascultări este același, sortează alfabetic
                     return entry1.getKey().compareTo(entry2.getKey());
                 })
-                .limit(5)
+                .limit(MAX_SIZE)
                 .forEachOrdered(entry -> top5Albums.put(entry.getKey(), entry.getValue()));
 
         return top5Albums;
     }
-
 
 }

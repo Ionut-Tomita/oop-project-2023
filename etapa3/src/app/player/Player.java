@@ -289,6 +289,11 @@ public final class Player {
         return new PlayerStats(filename, duration, repeatMode, shuffle, paused);
     }
 
+    /**
+     * Gets remained duration.
+     *
+     * @return the remained duration
+     */
     public Integer getRemainedDuration() {
         if (source != null) {
             return source.getDuration();

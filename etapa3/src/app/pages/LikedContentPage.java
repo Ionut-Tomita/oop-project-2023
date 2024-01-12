@@ -2,7 +2,7 @@ package app.pages;
 
 import app.audio.Collections.Playlist;
 import app.audio.Files.Song;
-import app.user.User;
+import app.user.normalUser.User;
 import app.user.UserAbstract;
 
 import java.util.List;

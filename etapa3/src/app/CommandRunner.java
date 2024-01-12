@@ -5,19 +5,22 @@ import app.audio.Collections.PlaylistOutput;
 import app.audio.Collections.PodcastOutput;
 import app.player.PlayerStats;
 import app.searchBar.Filters;
-import app.user.Artist;
-import app.user.Host;
-import app.user.User;
+import app.user.artist.Artist;
+import app.user.host.Host;
+import app.user.normalUser.User;
 import app.user.UserAbstract;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.input.CommandInput;
 import lombok.Getter;
-import main.Date;
-import main.Notifications;
-import main.Statistics;
+import app.user.artist.Info;
+import app.user.normalUser.Notifications;
+import app.statistics.Statistics;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * The type Command runner.
@@ -56,7 +59,7 @@ public final class CommandRunner {
         if (user.isStatus()) {
             user.setStatistics(user.wrapStatistics(commandInput));
             user.clearHistory();
-            user.clearLastWrapped();
+
             results = user.search(filters, type);
             message = "Search returned " + results.size() + " results";
         }
@@ -790,7 +793,13 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode wrapped(CommandInput command) {
+    /**
+     * wrapped object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode wrapped(final CommandInput command) {
 
         Statistics result = admin.wrapped(command);
 
@@ -802,26 +811,20 @@ public final class CommandRunner {
             objectNode.put("result", objectMapper.valueToTree(result));
         } else {
             UserAbstract user = admin.getUserAbstract(command.getUsername());
-            if (user.userType().equals("user")) {
-                objectNode.put("message", "No data to show for user %s."
-                        .formatted(command.getUsername()));
-            }
-            if (user.userType().equals("artist")) {
-                objectNode.put("message", "No data to show for artist %s."
-                        .formatted(command.getUsername()));
-            }
-            if (user.userType().equals("host")) {
-                objectNode.put("message", "No data to show for host %s."
-                        .formatted(command.getUsername()));
-            }
+            objectNode.put("message", user.noDataMessage());
         }
 
         return objectNode;
     }
 
+    /**
+     * end program object node.
+     *
+     * @return the object node
+     */
     public static ObjectNode endProgram() {
 
-        Map<String, Date> sorted = Admin.updateGeneralStatistics();
+        Map<String, Info> sorted = Admin.updateGeneralStatistics();
 
         ObjectNode objectNode = objectMapper.createObjectNode();
         objectNode.put("command", "endProgram");
@@ -831,7 +834,13 @@ public final class CommandRunner {
 
     }
 
-    public static ObjectNode subscribe(CommandInput command) {
+    /**
+     * subscribe object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode subscribe(final CommandInput command) {
         String message = admin.subscribe(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -843,7 +852,13 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode getNotifications(CommandInput command) {
+    /**
+     * get notifications object node.
+     *
+     * @param command
+     * @return notifications
+     */
+    public static ObjectNode getNotifications(final CommandInput command) {
 
         List<Notifications> notifications = admin.getNotifications(command);
 
@@ -856,7 +871,13 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode buyMerch(CommandInput command) {
+    /**
+     * buy merch object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode buyMerch(final CommandInput command) {
         String message = admin.buyMerch(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -868,7 +889,13 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode seeMerch(CommandInput command) {
+    /**
+     * see merch object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode seeMerch(final CommandInput command) {
         List<String> result = admin.seeMerch(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -885,7 +912,14 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode buyPremium(CommandInput command) {
+
+    /**
+     * buy premium object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode buyPremium(final CommandInput command) {
         String message = admin.buyPremium(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -897,7 +931,13 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode cancelPremium(CommandInput command) {
+    /**
+     * cancel premium object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode cancelPremium(final CommandInput command) {
         String message = admin.cancelPremium(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -909,7 +949,13 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode adBreak(CommandInput command) {
+    /**
+     * ad break object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode adBreak(final CommandInput command) {
         String message = admin.adBreak(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -922,7 +968,13 @@ public final class CommandRunner {
 
     }
 
-    public static ObjectNode updateRecommendation(CommandInput command) {
+    /**
+     * update recommendation object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode updateRecommendation(final CommandInput command) {
         String message = admin.updateRecommendation(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -935,7 +987,13 @@ public final class CommandRunner {
 
     }
 
-    public static ObjectNode previousPage(CommandInput command) {
+    /**
+     * previous page object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode previousPage(final CommandInput command) {
         String message = admin.previousPage(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -948,7 +1006,13 @@ public final class CommandRunner {
 
     }
 
-    public static ObjectNode nextPage(CommandInput command) {
+    /**
+     * next page object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode nextPage(final CommandInput command) {
         String message = admin.nextPage(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -960,7 +1024,13 @@ public final class CommandRunner {
         return objectNode;
     }
 
-    public static ObjectNode loadRecommendations(CommandInput command) {
+    /**
+     * load recommendations object node.
+     *
+     * @param command
+     * @return the object node
+     */
+    public static ObjectNode loadRecommendations(final CommandInput command) {
         String message = admin.loadRecommendations(command);
 
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -971,4 +1041,5 @@ public final class CommandRunner {
 
         return objectNode;
     }
+
 }

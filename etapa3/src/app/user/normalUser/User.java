@@ -1,32 +1,59 @@
-package app.user;
+package app.user.normalUser;
 
 import app.Admin;
 import app.CommandRunner;
-import app.audio.Collections.*;
+import app.audio.Collections.Album;
+import app.audio.Collections.AudioCollection;
+import app.audio.Collections.Playlist;
+import app.audio.Collections.Podcast;
+import app.audio.Collections.PlaylistOutput;
+
 import app.audio.Files.AudioFile;
 import app.audio.Files.Episode;
 import app.audio.Files.Song;
 import app.audio.LibraryEntry;
-import app.pages.ArtistPage;
 import app.pages.HomePage;
 import app.pages.LikedContentPage;
 import app.pages.Page;
+import app.pages.navigation.NavigateToNextPageCommand;
+import app.pages.navigation.NavigateToPreviousPageCommand;
+import app.pages.navigation.NavigationCommand;
 import app.player.Player;
 import app.player.PlayerStats;
 import app.searchBar.Filters;
 import app.searchBar.SearchBar;
+import app.statistics.ArtistStatistics;
+import app.statistics.HostStatistics;
+import app.statistics.Statistics;
+import app.statistics.UserStatistics;
+import app.user.ContentCreator;
+import app.user.UserAbstract;
+import app.user.artist.Artist;
+import app.user.artist.ArtistOutput;
+import app.user.host.Host;
 import app.utils.Enums;
 import fileio.input.CommandInput;
 import lombok.Getter;
 import lombok.Setter;
-import main.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Comparator;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 /**
  * The type User.
  */
 public final class User extends UserAbstract {
+
     @Getter
     private ArrayList<Playlist> playlists;
     @Getter
@@ -64,14 +91,25 @@ public final class User extends UserAbstract {
     private boolean premium;
     @Getter
     private List<Song> recommendedSongs;
-    @Getter
-    private List<Playlist> recommendedPlaylists;
     @Getter @Setter
     private String recommedationPlaylistUpdated;
+    @Getter
+    private Playlist recommendationPlaylist;
+    @Getter
+    private Playlist fanPlaylist;
     @Getter
     private LinkedList<Page> previousPages;
     @Getter @Setter
     private LinkedList<Page> nextPages;
+    @Getter
+    private Map<Integer, Integer> ads;
+    public static final int PASSED_TIME = 30;
+    public static final int MAX_COUNT_FIRST_GENRE = 5;
+    public static final int MAX_COUNT_SECOND_GENRE = 3;
+    public static final int MAX_COUNT_THIRD_GENRE = 2;
+    public static final int MAX_SONGS = 5;
+    private static final int MAX_GENRES = 3;
+
 
     /**
      * Instantiates a new User.
@@ -94,7 +132,6 @@ public final class User extends UserAbstract {
         currentPage = homePage;
         likedContentPage = new LikedContentPage(this);
 
-
         listenHistory = new ListenHistory();
         statistics = new UserStatistics();
         lastWrappedAlbum = new HashMap<>();
@@ -102,8 +139,11 @@ public final class User extends UserAbstract {
         merch = new HashMap<>();
         premium = false;
         recommendedSongs = new ArrayList<>();
-        recommendedPlaylists = new ArrayList<>();
+        recommendationPlaylist = new Playlist();
+        fanPlaylist = new Playlist();
         recommedationPlaylistUpdated = "";
+
+        ads = new HashMap<>();
 
         previousPages = new LinkedList<>();
         nextPages = new LinkedList<>();
@@ -112,6 +152,28 @@ public final class User extends UserAbstract {
     @Override
     public String userType() {
         return "user";
+    }
+
+    /**
+     * wrap statistics
+     * @param command the command input
+     * @param users        the users
+     * @return
+     */
+    @Override
+    public Statistics wrap(final CommandInput command, final List<User> users) {
+        wrapStatistics(command);
+        UserStatistics statistics1 = (UserStatistics) statistics;
+        statistics1.updateStatistics();
+        if (!statistics1.isEmpty(statistics1)) {
+            return statistics1;
+        }
+        return null;
+    }
+
+    @Override
+    public String noDataMessage() {
+        return "No data to show for user %s.".formatted(this.getUsername());
     }
 
     /**
@@ -189,7 +251,7 @@ public final class User extends UserAbstract {
      *
      * @return the string
      */
-    public String load(Integer timestamp) {
+    public String load(final Integer timestamp) {
         if (!status) {
             return "%s is offline.".formatted(getUsername());
         }
@@ -446,7 +508,7 @@ public final class User extends UserAbstract {
             return "A playlist with the same name already exists.";
         }
 
-        playlists.add(new Playlist(name, getUsername(), timestamp));
+        playlists.add(new Playlist.Builder(name, getUsername()).build());
 
         return "Playlist created successfully.";
     }
@@ -636,15 +698,61 @@ public final class User extends UserAbstract {
         player.simulatePlayer(time);
     }
 
-    public Statistics wrapStatistics(CommandInput command) {
-        // pentru fiecare album ascutat, adaugam in statistici
-        // doar melodiile care au fost deja ascutate
 
+    /**
+     * Wrap statistics.
+     *
+     * @param command the command
+     * @return the statistics
+     */
+    public Statistics wrapStatistics(final CommandInput command) {
         UserStatistics statistics1 = (UserStatistics) statistics;
 
+        processAlbums(command, statistics1);
+        processPodcasts(command, statistics1);
+        return statistics1;
+    }
+
+    /**
+     * process podcasts
+     * @param command
+     * @param statistics1
+     */
+    public void processPodcasts(final CommandInput command, final UserStatistics statistics1) {
+        for (Podcast podcast : listenHistory.getListenPodcasts().keySet()) {
+            Host host = CommandRunner.getAdmin().getHost(podcast.getOwner());
+            int loadTime = listenHistory.getListenPodcasts().get(podcast);
+
+            for (Episode episode : podcast.getEpisodes()) {
+                if (loadTime <= command.getTimestamp()) {
+                    statistics1.setTopEpisodes(episode.getName());
+                    loadTime += episode.getDuration();
+
+                    if (host != null) {
+                        HostStatistics hostStatistics = (HostStatistics) host.getStatistics();
+                        hostStatistics.setTopEpisodes(episode.getName());
+                        hostStatistics.setTopFans(getUsername());
+                    }
+
+                } else {
+                    if (command.getCommand().equals("wrapped")) {
+                        lastWrappedPodcast.put(podcast, command.getTimestamp());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * process albums
+     * @param command
+     * @param statistics1
+     */
+    public void processAlbums(final CommandInput command, final UserStatistics statistics1) {
         for (Album album : listenHistory.getListenAlbums().keySet()) {
             Artist artist = CommandRunner.getAdmin().getArtist(album.getOwner());
             int loadTime = listenHistory.getListenAlbums().get(album);
+
             for (Song song : album.getSongs()) {
                 if (loadTime <= command.getTimestamp()) {
                     statistics1.setTopArtists(song.getArtist());
@@ -667,45 +775,35 @@ public final class User extends UserAbstract {
                 }
             }
         }
-        for (Podcast podcast : listenHistory.getListenPodcasts().keySet()) {
-            Host host = CommandRunner.getAdmin().getHost(podcast.getOwner());
-            int loadTime = listenHistory.getListenPodcasts().get(podcast);
-            for (Episode episode : podcast.getEpisodes()) {
-                if (loadTime <= command.getTimestamp()) {
-                    statistics1.setTopEpisodes(episode.getName());
-                    loadTime += episode.getDuration();
-
-                    if (host != null) {
-                        HostStatistics hostStatistics = (HostStatistics) host.getStatistics();
-                        hostStatistics.setTopEpisodes(episode.getName());
-                        hostStatistics.setTopFans(getUsername());
-                    }
-
-                } else {
-                    if (command.getCommand().equals("wrapped")) {
-                        lastWrappedPodcast.put(podcast, command.getTimestamp());
-                    }
-                }
-            }
-        }
-        return statistics1;
     }
 
+    /**
+     * clear listen history
+     */
     public void clearHistory() {
         listenHistory = new ListenHistory();
+        clearLastWrapped();
     }
 
+    /**
+     * clear last wrapped
+     */
     public void clearLastWrapped() {
         lastWrappedAlbum = new HashMap<>();
     }
 
-    public String subscribe(CommandInput command) {
-        if (currentPage.getOwner().userType().equals("artist") ||
-                currentPage.getOwner().userType().equals("host")) {
+    /**
+     * subscribe to an artist or host
+     *
+     * @return message
+     */
+    public String subscribe() {
+        if (currentPage.getOwner().userType().equals("artist")
+                || currentPage.getOwner().userType().equals("host")) {
             ContentCreator contentCreator = (ContentCreator) currentPage.getOwner();
 
             if (contentCreator.getSubscribers().contains(this)) {
-                // se dezaboneaza
+                // unsubscribe
                 contentCreator.getSubscribers().remove(this);
                 return contentCreator.unSubscribeMessage(this);
             }
@@ -716,15 +814,28 @@ public final class User extends UserAbstract {
         return "To subscribe you need to be on the page of an artist or host.";
     }
 
-    public void addNotification(String name, String description) {
+    /**
+     * add a notification
+     * @param name
+     * @param description
+     */
+    public void addNotification(final String name, final String description) {
         notifications.add(new Notifications(name, description));
     }
 
+    /**
+     * clear notifications
+     */
     public void clearNotifications() {
         notifications = new ArrayList<>();
     }
 
-    public String buyMerch(CommandInput command) {
+    /**
+     * buy merch
+     * @param command
+     * @return message
+     */
+    public String buyMerch(final CommandInput command) {
         if (!currentPage.getOwner().userType().equals("artist")) {
             return "Cannot buy merch from this page.";
         }
@@ -733,7 +844,6 @@ public final class User extends UserAbstract {
             return "The merch %s doesn't exist.".formatted(command.getName());
         }
 
-        // adauga pentru artist merchRevenue
         Admin.addToGeneralStatistics(artist.getUsername());
         artist.addMerchRevenue(artist.getMerchPrice(command.getName()));
         artist.addTotalRevenue(artist.getMerchPrice(command.getName()));
@@ -743,9 +853,14 @@ public final class User extends UserAbstract {
 
     }
 
-    public List<String> seeMerch(CommandInput command) {
+    /**
+     * see merch
+     *
+     * @return merch
+     */
+    public List<String> seeMerch() {
         List<String> results = new ArrayList<>();
-        // adauga toate merchurile in ordine crescatoare dupa timestamp
+
         merch.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue())
                 .forEachOrdered(x -> results.add(x.getKey()));
@@ -753,7 +868,12 @@ public final class User extends UserAbstract {
         return results;
     }
 
-    public String buyPremium(CommandInput command) {
+    /**
+     * buy premium
+     *
+     * @return message
+     */
+    public String buyPremium() {
         if (premium) {
             return "%s is already a premium user.".formatted(getUsername());
         }
@@ -762,7 +882,12 @@ public final class User extends UserAbstract {
         return "%s bought the subscription successfully.".formatted(getUsername());
     }
 
-    public String cancelPremium(CommandInput command) {
+    /**
+     * cancel premium
+     *
+     * @return message
+     */
+    public String cancelPremium() {
         if (!premium) {
             return "%s is not a premium user.".formatted(getUsername());
         }
@@ -771,98 +896,304 @@ public final class User extends UserAbstract {
         return "%s cancelled the subscription successfully.".formatted(getUsername());
     }
 
-    public String adBreak(CommandInput command) {
+    /**
+     * adBreak
+     * @return message
+     */
+    public String adBreak(final CommandInput command) {
 
         if (player.getCurrentAudioFile() == null) {
             return "%s is not playing any music.".formatted(getUsername());
         }
-
+        ads.put(command.getTimestamp(), command.getPrice());
         return "Ad inserted successfully.";
     }
 
-    public String updateRecommendation(List<Song> songs, CommandInput command) {
+    /**
+     * update recommendations
+     * @param songs
+     * @param command
+     * @return message
+     */
+    public String updateRecommendation(final List<Song> songs, final CommandInput command) {
 
         if (command.getRecommendationType().equals("random_playlist")) {
             recommedationPlaylistUpdated = "%s's recommendations".formatted(getUsername());
-            //return "No new recommendations were found";
+
+            updateRecommendationsPlaylist();
         }
 
-        if (player.getSource() != null && player.getType().equals("song") ) {
+        if (player.getSource() != null && player.getType().equals("song")) {
             Song song = (Song) player.getCurrentAudioFile();
 
             if (command.getRecommendationType().equals("fans_playlist")) {
-                recommedationPlaylistUpdated = "%s Fan Club recommendations".formatted(song.getArtist());
-                //return "No new recommendations were found";
+                recommedationPlaylistUpdated = "%s Fan Club recommendations"
+                        .formatted(song.getArtist());
+                updateFanPlaylist(song);
             }
 
             if (command.getRecommendationType().equals("random_song")) {
                 Integer passedTime = song.getDuration() - player.getRemainedDuration();
-                if (passedTime >= 30) {
-                    //Se cauta melodiile din genre-ul melodiei care canta acum.
-                    List<Song> songsByGenre = new ArrayList<>();
-                    for (Song song1 : songs) {
-                        if (song1.getGenre().equals(song.getGenre())) {
-                            songsByGenre.add(song1);
-                        }
-                    }
-
-                    Random random = new Random(passedTime);
-                    int index = random.nextInt(songsByGenre.size());
-                    Song generatedSong = songsByGenre.get(index);
-                    recommendedSongs.add(generatedSong);
-                    getHomePage().getRecommendedSongs().add(generatedSong);
-
+                if (passedTime >= PASSED_TIME) {
+                    addRandomSong(songs, passedTime, song);
                 } else {
                     return "No new recommendations were found";
                 }
             }
-
         }
-
-
         return "The recommendations for user %s have been updated successfully."
                 .formatted(getUsername());
     }
 
+    /**
+     * update Recommendations Playlist
+     */
+    private void updateRecommendationsPlaylist() {
+        recommendationPlaylist = new Playlist.Builder("recommendations", getUsername())
+                .visibility(Enums.Visibility.PRIVATE).build();
+        List<String> top3GenresList = getTop3Genres();
+
+        List<Song> songsFromSources = addAndSortSongsFromSources();
+
+        addSongsInRecommendationsPlaylist(top3GenresList, songsFromSources);
+
+    }
+
+    /**
+     * add songs in recommendations playlist
+     * @param top3GenresList
+     * @param songsFromSources
+     */
+    private void addSongsInRecommendationsPlaylist(final List<String> top3GenresList,
+                                                   final List<Song> songsFromSources) {
+        Playlist newPlaylist = new Playlist.Builder("newPlaylist", getUsername())
+                .visibility(Enums.Visibility.PRIVATE)
+                .build();
+        addSongsForGenre(top3GenresList, songsFromSources, 0, MAX_COUNT_FIRST_GENRE, newPlaylist);
+        addSongsForGenre(top3GenresList, songsFromSources, 1, MAX_COUNT_SECOND_GENRE, newPlaylist);
+        addSongsForGenre(top3GenresList, songsFromSources, 2, MAX_COUNT_THIRD_GENRE, newPlaylist);
+    }
+
+    /**
+     * @param topGenresList
+     * @param songsFromSources
+     * @param genreIndex
+     * @param maxCount
+     */
+    private void addSongsForGenre(final List<String> topGenresList,
+                                  final List<Song> songsFromSources,
+                                  final int genreIndex, final int maxCount,
+                                  final Playlist newPlaylist) {
+
+        if (genreIndex < topGenresList.size()) {
+            String targetGenre = topGenresList.get(genreIndex);
+
+            int count = 0;
+            for (Song song : songsFromSources) {
+                if (count >= maxCount)  {
+                    break;
+                }
+                if (song.matchesGenre(targetGenre)) {
+                    newPlaylist.addSong(song);
+                    count++;
+                }
+            }
+        }
+        recommendationPlaylist = new Playlist.Builder("%s's recommendations"
+                .formatted(getUsername()), getUsername())
+                .visibility(Enums.Visibility.PRIVATE)
+                .songs(newPlaylist.getSongs())
+                .build();
+    }
+
+
+    /**
+     * add and sort songs from Liked Songs,
+     * Playlists and Followed Playlists
+     * @return
+     */
+    private List<Song> addAndSortSongsFromSources() {
+        List<Song> songsFromSources = new ArrayList<>();
+        Stream.concat(
+                        likedSongs.stream(),
+                        Stream.concat(
+                                playlists.stream().flatMap(playlist -> playlist.getSongs()
+                                        .stream()),
+                                followedPlaylists.stream().flatMap(playlist -> playlist.getSongs()
+                                        .stream())
+                        )
+                ).forEach(song -> {
+                    if (!songsFromSources.contains(song)) {
+                        songsFromSources.add(song);
+                    }
+                });
+
+        songsFromSources.sort((o1, o2) -> {
+            if (o1.getLikes().equals(o2.getLikes())) {
+                return o1.getName().compareTo(o2.getName());
+            }
+            return o2.getLikes().compareTo(o1.getLikes());
+        });
+        return songsFromSources;
+    }
+
+    /**
+     * get top 3 genres
+     * @return top 3 genres list
+     */
+    private List<String> getTop3Genres() {
+        Map<String, Integer> genres = new HashMap<>();
+        addGenresFromSources(genres);
+
+        Map<String, Integer> top3Genres = getTop3GenresMap(genres);
+
+        return new ArrayList<>(top3Genres.keySet());
+    }
+
+    /**
+     * get top 3 genres map
+     * @param genres
+     * @return
+     */
+    private Map<String, Integer> getTop3GenresMap(final Map<String, Integer> genres) {
+        Map<String, Integer> top3Genres = new LinkedHashMap<>();
+
+        genres.entrySet().stream()
+                .sorted((entry1, entry2) -> {
+
+                    int compare = entry2.getValue().compareTo(entry1.getValue());
+                    if (compare != 0) {
+                        return compare;
+                    }
+
+                    return entry1.getKey().compareTo(entry2.getKey());
+                })
+                .limit(MAX_GENRES)
+                .forEachOrdered(entry -> top3Genres.put(entry.getKey(), entry.getValue()));
+        return top3Genres;
+    }
+
+    /**
+     * add genres from sources
+     * @param genres
+     */
+    private void addGenresFromSources(final Map<String, Integer> genres) {
+        Stream.concat(
+                        likedSongs.stream(),
+                        Stream.concat(
+                                playlists.stream().flatMap(playlist -> playlist.getSongs()
+                                        .stream()),
+                                followedPlaylists.stream().flatMap(playlist -> playlist.getSongs()
+                                        .stream())
+                        )
+                ).map(Song::getGenre)
+                .forEach(genre -> genres.merge(genre, 1, Integer::sum));
+    }
+
+    /**
+     * update fan playlist
+     * @param currentSong
+     */
+    private void updateFanPlaylist(final Song currentSong) {
+        Artist artist = Admin.getInstance().getArtist(currentSong.getArtist());
+        ArtistStatistics artistStatistics = (ArtistStatistics) artist.getStatistics();
+
+        Playlist newPlaylist = new Playlist.Builder("newPlaylist", getUsername())
+                .visibility(Enums.Visibility.PRIVATE)
+                .build();
+
+        ArtistOutput artistInfo = new ArtistOutput(artistStatistics);
+        List<String> top5Fans = artistInfo.getTopFans();
+
+        top5Fans.forEach(fan -> {
+            User fanUser = Admin.getInstance().getUser(fan);
+            List<Song> fanLikedSongs = fanUser.getLikedSongs();
+
+            List<Song> top5Songs = fanLikedSongs.stream()
+                    .sorted(Comparator.comparingInt(Song::getLikes).reversed())
+                    .limit(MAX_SONGS)
+                    .collect(Collectors.toList());
+
+            top5Songs.forEach(song -> {
+                if (!newPlaylist.containsSong(song)) {
+                    newPlaylist.addSong(song);
+                }
+            });
+        });
+
+        fanPlaylist = new Playlist.Builder("%s Fan Club recommendations"
+                .formatted(artist.getUsername()), getUsername())
+                .visibility(Enums.Visibility.PRIVATE)
+                .songs(newPlaylist.getSongs())
+                .build();
+    }
+
+    /**
+     * add random song
+     * @param songs
+     * @param passedTime
+     * @param currentSong
+     */
+    public void addRandomSong(final List<Song> songs, final Integer passedTime,
+                              final Song currentSong) {
+
+        List<Song> songsByGenre = songs.stream()
+                .filter(song -> song.getGenre().equals(currentSong.getGenre()))
+                .toList();
+
+        Random random = new Random(passedTime);
+        int index = random.nextInt(songsByGenre.size());
+        Song generatedSong = songsByGenre.get(index);
+        recommendedSongs.add(generatedSong);
+        getHomePage().getRecommendedSongs().add(generatedSong);
+    }
+
+    /**
+     * get artist page
+     * @return page
+     */
     public Page getArtistPage() {
         Song song = (Song) player.getSource().getAudioFile();
         Artist artist = CommandRunner.getAdmin().getArtist(song.getArtist());
         return artist.getPage();
     }
 
+    /**
+     * get host page
+     * @return page
+     */
     public Page getHostPage() {
         Episode episode = (Episode) player.getSource().getAudioFile();
         Host host = CommandRunner.getAdmin().getHost(episode.getHost());
         return host.getPage();
     }
 
-    public String previousPage(CommandInput command) {
-        if (previousPages.isEmpty()) {
-            return "There are no pages left to go back.";
-        }
-
-        // update la pagina curenta si la forward pages and previous pages
-        Page currentPage = previousPages.removeFirst();
-        nextPages.addFirst(this.currentPage);
-        this.currentPage = currentPage;
-
-        return "The user %s has navigated successfully to the previous page.".formatted(getUsername());
+    /**
+     * move to previous page
+     *
+     * @return message
+     */
+    public String previousPage() {
+        NavigationCommand command = new NavigateToPreviousPageCommand(this);
+        return executeNavigationCommand(command);
     }
 
-    public String nextPage(CommandInput command) {
-if (nextPages.isEmpty()) {
-            return "There are no pages left to go forward.";
-        }
-
-        // update la pagina curenta si la forward pages and previous pages
-        Page currentPage = nextPages.removeFirst();
-        previousPages.addFirst(this.currentPage);
-        this.currentPage = currentPage;
-
-        return "The user %s has navigated successfully to the next page.".formatted(getUsername());
+    /**
+     * move to next page
+     *
+     * @return message
+     */
+    public String nextPage() {
+        NavigationCommand command = new NavigateToNextPageCommand(this);
+        return executeNavigationCommand(command);
     }
 
-    public String loadRecommendations(CommandInput command) {
+    /**
+     * load recommendations
+     *
+     * @return message
+     */
+    public String loadRecommendations() {
     if (recommendedSongs.isEmpty()) {
             return "No recommendations available.";
         }
@@ -874,4 +1205,50 @@ if (nextPages.isEmpty()) {
 
         return "Playback loaded successfully.";
     }
+
+    /**
+     * Execute the given navigation command
+     *
+     * @param command Navigation command to execute
+     * @return Result message
+     */
+    public String executeNavigationCommand(final NavigationCommand command) {
+        return command.execute();
+    }
+
+    /**
+     * Navigate to the previous page
+     *
+     * @return Result message
+     */
+    public String navigateToPreviousPage() {
+        if (previousPages.isEmpty()) {
+            return "There are no pages left to go back.";
+        }
+
+        Page newCurrentPage = previousPages.removeFirst();
+        nextPages.addFirst(this.currentPage);
+        this.currentPage = newCurrentPage;
+
+        return "The user %s has navigated successfully to the previous page."
+                .formatted(getUsername());
+    }
+
+    /**
+     * Navigate to the next page
+     *
+     * @return Result message
+     */
+    public String navigateToNextPage() {
+        if (nextPages.isEmpty()) {
+            return "There are no pages left to go forward.";
+        }
+
+        Page newCurrentPage = nextPages.removeFirst();
+        previousPages.addFirst(this.currentPage);
+        this.currentPage = newCurrentPage;
+
+        return "The user %s has navigated successfully to the next page.".formatted(getUsername());
+    }
+
 }
